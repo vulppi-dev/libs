@@ -1,0 +1,25 @@
+# dependencies
+node_modules/
+package-lock.json
+*.pnp*
+
+# testing
+coverage/
+*.test*
+
+# production
+out/
+build/
+dist/
+esm/
+lib/
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+*.log*
+
+# local env files
+*.env*
