@@ -1,21 +1,18 @@
 # dependencies
-node_modules/
+/node_modules
 package-lock.json
 *.pnp*
 
 # testing
-coverage/
+/coverage
 *.test*
 
-# production
-out/
-build/
-dist/
-esm/
-lib/
-
-# build
-.turbo
+# development
+/src
+tsconfig.json
+tsconfig.esm.json
+.babelrc
+.gitignore
 
 # misc
 .DS_Store
@@ -23,7 +20,6 @@ lib/
 
 # debug
 *.log*
-*.log
 
 # local env files
 *.env*

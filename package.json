@@ -1,7 +1,16 @@
-{
-  "name": "@vulppi/libs",
-  "version": "0.0.1",
+{   "name": "turborepo-basic-npm",
+  "version": "0.0.0",
+  "private": true,
   "workspaces": [
     "libs/*"
-  ]
+  ],
+  "scripts": {
+    "build": "turbo run build --parallel",
+    "dev": "turbo run dev --parallel",
+    "test": "turbo run test"
+  },
+  "devDependencies": {
+    "prettier": "latest",
+    "turbo": "latest"
+  }
 }
