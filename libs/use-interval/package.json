@@ -11,7 +11,8 @@
   "module": "esm/index.mjs",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/vulppi-studio/libs/tree/main/libs/use-interval"
+    "url": "git+https://github.com/vulppi-studio/libs.git",
+    "directory": "libs/use-interval"
   },
   "license": "MIT",
   "scripts": {
