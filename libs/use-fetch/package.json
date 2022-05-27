@@ -1,6 +1,6 @@
 {
-  "name": "@vulppi/react-hooks",
-  "version": "0.21.0",
+  "name": "@vulppi/react-use-fetch",
+  "version": "0.20.0",
   "private": false,
   "author": {
     "name": "Renato Rodrigues",
@@ -12,7 +12,7 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/vulppi-studio/libs.git",
-    "directory": "libs/hooks"
+    "directory": "libs/use-fetch"
   },
   "license": "MIT",
   "scripts": {
@@ -33,31 +33,14 @@
   },
   "devDependencies": {
     "@types/node": "^17.0.35",
+    "@types/react": "^18.0.9",
     "npm-run-all": "^4.1.5",
     "renamer": "^4.0.0",
     "rimraf": "^3.0.2",
     "terser": "^5.13.1",
     "typescript": "^4.7.2"
   },
-  "dependencies": {
-    "@vulppi/react-use-async": "latest",
-    "@vulppi/react-use-boolean": "latest",
-    "@vulppi/react-use-click-outside": "latest",
-    "@vulppi/react-use-debounce": "latest",
-    "@vulppi/react-use-debounce-trigger": "latest",
-    "@vulppi/react-use-fetch": "latest",
-    "@vulppi/react-use-fork-ref": "latest",
-    "@vulppi/react-use-imask": "latest",
-    "@vulppi/react-use-interval": "latest",
-    "@vulppi/react-use-is-mounted": "latest",
-    "@vulppi/react-use-media-query": "latest",
-    "@vulppi/react-use-rerender": "latest",
-    "@vulppi/react-use-state-array": "latest",
-    "@vulppi/react-use-state-debounce": "latest",
-    "@vulppi/react-use-state-history": "latest",
-    "@vulppi/react-use-state-local-storage": "latest",
-    "@vulppi/react-use-string-mask": "latest",
-    "@vulppi/react-use-timeout": "latest",
-    "@vulppi/react-use-timer": "latest"
+  "peerDependencies": {
+    "react": ">=18.0.0"
   }
 }
