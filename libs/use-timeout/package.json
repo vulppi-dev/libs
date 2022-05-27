@@ -11,7 +11,7 @@
   "module": "esm/index.mjs",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/vulppi-studio/node-tree/tree/main/libs/use-timeout"
+    "url": "git+https://github.com/vulppi-studio/libs/tree/main/libs/use-timeout"
   },
   "license": "MIT",
   "scripts": {
