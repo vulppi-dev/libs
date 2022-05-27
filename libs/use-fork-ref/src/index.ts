@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react'
 
-type ReactRefs<T> =
+export type ReactRefs<T> =
   | React.ForwardedRef<T | undefined | null>
   | React.RefCallback<T | undefined | null>
   | React.MutableRefObject<T | undefined | null>

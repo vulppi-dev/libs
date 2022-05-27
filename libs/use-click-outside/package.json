@@ -1,6 +1,6 @@
 {
-  "name": "@vulppi/react-use-fork-ref",
-  "version": "0.20.1",
+  "name": "@vulppi/react-use-click-outside",
+  "version": "0.20.0",
   "private": false,
   "author": {
     "name": "Renato Rodrigues",
@@ -11,7 +11,7 @@
   "module": "esm/index.mjs",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/vulppi-studio/node-tree/tree/main/libs/use-fork-ref"
+    "url": "git+https://github.com/vulppi-studio/node-tree/tree/main/libs/use-click-outside"
   },
   "license": "MIT",
   "scripts": {
@@ -41,5 +41,8 @@
   },
   "peerDependencies": {
     "react": ">=18.0.0"
+  },
+  "dependencies": {
+    "@vulppi/react-use-fork-ref": "^0.20.1"
   }
 }
