@@ -3,10 +3,6 @@ node_modules/
 package-lock.json
 *.pnp*
 
-# testing
-coverage/
-*.test*
-
 # production
 out/
 build/

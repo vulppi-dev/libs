@@ -4,22 +4,21 @@
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "declaration": true,
-    "isolatedModules": true,
-    "module": "ES2022",
+    "isolatedModules": false,
+    "module": "ESNext",
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "strict": true,
     "target": "ESNext",
-    "outDir": "esm",
     "baseUrl": "."
   },
-  "exclude": [
-    "node_modules",
+  "exclude": ["node_modules"],
+  "include": [
     "**/*.test.ts",
     "**/*.test.tsx",
     "**/*.spec.ts",
-    "**/*.spec.tsx"
-  ],
-  "include": ["src/**/*.ts"]
+    "**/*.spec.tsx",
+    "./jest.d.ts"
+  ]
 }

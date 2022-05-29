@@ -15,6 +15,12 @@
     "baseUrl": "src",
     "outDir": "esm"
   },
-  "exclude": ["node_modules"],
+  "exclude": [
+    "node_modules",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.spec.ts",
+    "**/*.spec.tsx"
+  ],
   "include": ["src/**/*.ts", "src/**/*.tsx"]
 }
