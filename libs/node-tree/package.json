@@ -1,6 +1,6 @@
 {
   "name": "@vulppi/node-tree",
-  "version": "0.3.5",
+  "version": "0.3.6",
   "private": false,
   "author": {
     "name": "Renato Rodrigues",
@@ -11,7 +11,7 @@
   "module": "esm/index.mjs",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/vulppi-studio/libs.git",
+    "url": "git+https://github.com/vulppi-dev/libs.git",
     "directory": "libs/node-tree"
   },
   "keywords": [

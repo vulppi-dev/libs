@@ -1,6 +1,6 @@
 {
   "name": "@vulppi/react-hooks",
-  "version": "0.21.0",
+  "version": "0.21.1",
   "private": false,
   "author": {
     "name": "Renato Rodrigues",
@@ -11,7 +11,7 @@
   "module": "esm/index.mjs",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/vulppi-studio/libs.git",
+    "url": "git+https://github.com/vulppi-dev/libs.git",
     "directory": "libs/hooks"
   },
   "license": "MIT",
