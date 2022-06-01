@@ -6,8 +6,6 @@
     "libs/*"
   ],
   "scripts": {
-    "build": "turbo run build --parallel",
-    "dev": "turbo run dev --parallel",
     "test": "jest",
     "test:watch": "jest --watch"
   },
@@ -20,7 +18,6 @@
     "jest-environment-jsdom": "^28.1.0",
     "prettier": "latest",
     "ts-jest": "^28.0.3",
-    "ts-node": "^10.8.0",
-    "turbo": "latest"
+    "ts-node": "^10.8.0"
   }
 }

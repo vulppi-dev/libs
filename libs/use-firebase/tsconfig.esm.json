@@ -3,7 +3,7 @@
     "allowJs": true,
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
-    "declaration": true,
+    "declaration": false,
     "isolatedModules": true,
     "jsx": "react",
     "moduleResolution": "node",
