@@ -65,8 +65,10 @@ export const extractTokenFromAuthorization = (
   return authorization ?? null
 }
 
-export const omitNullables = <R extends any = any>(obj: R) => {
+export const omitNullables = <R extends any = any>(obj: R): R => {
   if (typeof obj !== 'object') return obj
+  if (Array.isArray(obj))
+    return obj.map(omitNullables).filter((v) => v != null) as R
 
   const result: any = {}
   for (const key in obj) {
