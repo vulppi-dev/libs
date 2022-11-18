@@ -10,9 +10,6 @@ dist/
 esm/
 lib/
 
-# build
-.turbo
-
 # misc
 .DS_Store
 *.pem
@@ -23,3 +20,6 @@ lib/
 
 # local env files
 *.env*
+
+# Refactor:
+.old

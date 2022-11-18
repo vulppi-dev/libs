@@ -1,6 +1,6 @@
 {
-  "name": "@vulppi/node-tree",
-  "version": "0.4.0",
+  "name": "@vulppi/template",
+  "version": "0.0.0",
   "license": "MIT",
   "private": false,
   "author": {
@@ -10,7 +10,7 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/vulppi-dev/libs.git",
-    "directory": "libs/node-tree"
+    "directory": "libs/template"
   },
   "keywords": [
     "tree",
