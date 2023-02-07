@@ -25,19 +25,23 @@ export const unionSerialFunctions =
 export const promiseDelay = (ms: number) =>
   new Promise<never>((resolve) => setTimeout(resolve, ms))
 
-export const omitShallowProps = <
-  P extends Object = any,
-  K extends string = any,
->(
+export const clone = <E extends any>(obj: E) => {
+  if (typeof structuredClone !== 'function') {
+    return JSON.parse(JSON.stringify(obj)) as E
+  } else {
+    return structuredClone(obj)
+  }
+}
+
+export const omitShallowProps = <P extends object, K extends keyof P>(
   obj: P,
   ...keys: K[]
 ) => {
-  const ret = { ...obj } as Omit<P, K>
+  const ret = clone(obj)
   for (const key of keys) {
-    // @ts-ignore
     delete ret[key]
   }
-  return ret
+  return ret as Omit<P, K>
 }
 
 export const tryCatchCallback = <R extends Function>(run: R, cbErr: any) => {
@@ -65,19 +69,20 @@ export const extractTokenFromAuthorization = (
   return authorization ?? null
 }
 
-export const omitNullables = <R extends any = any>(obj: R): R => {
+export const omitNullables = <R extends object>(obj: R): R => {
   if (typeof obj !== 'object') return obj
   if (Array.isArray(obj))
-    return obj.map(omitNullables).filter((v) => v != null) as R
+    return obj.filter((v) => v != null).map(omitNullables) as R
 
-  const result: any = {}
+  const result = {} as R
   for (const key in obj) {
     if (obj[key] != null) {
       if (typeof obj[key] === 'object') {
         if (Array.isArray(obj[key])) {
           // @ts-ignore
-          result[key] = obj[key].map(omitNullables).filter((v) => v != null)
+          result[key] = obj[key].filter((v) => v != null).map(omitNullables)
         } else {
+          // @ts-ignore
           result[key] = omitNullables(obj[key])
         }
       } else {

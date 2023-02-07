@@ -23,4 +23,18 @@ export declare interface Directive<
     | void
 }
 
+export declare type VoidFunction = () => void
+
 export declare type UnsubscribeList = (() => void)[]
+
+export declare type ValuesOf<T extends readonly any[]> = T[number]
+
+export declare type Args<F extends Function> = F extends (
+  ...args: infer A
+) => any
+  ? A
+  : never
+
+export declare type Arguments<F extends Function> = Args<F>
+
+export declare type Params<F extends Function> = Args<F>
