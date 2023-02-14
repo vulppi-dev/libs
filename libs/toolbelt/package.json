@@ -1,6 +1,6 @@
 {
   "name": "@vulppi/toolbelt",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "license": "MIT",
   "private": false,
   "author": {
@@ -25,7 +25,7 @@
     "clear": "rimraf dist",
     "build:all": "run-p build:bundle build:types",
     "build:bundle": "scripts-build",
-    "build:types": "tsc --emitDeclarationOnly",
+    "build:types": "tsc",
     "pub": "npm publish --access public",
     "pub:alpha": "npm publish --access public --tag alpha",
     "pub:beta": "npm publish --access public --tag beta"

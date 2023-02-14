@@ -6,6 +6,7 @@
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "declaration": true,
+    "emitDeclarationOnly": true,
     "isolatedModules": true,
     "moduleResolution": "node",
     "resolveJsonModule": true,
