@@ -1,6 +1,6 @@
 export * from './functions'
-export * from './math'
-export * from './regexp'
+export * as math from './math'
+export * as regexp from './regexp'
 
 export declare type Null = null | undefined
 
@@ -31,15 +31,6 @@ export declare interface SvelteDirective<
     | undefined
     | void
 }
-
-/**
- * @deprecated
- * Use SvelteDirective instead
- */
-export declare type Directive<
-  P extends any = any,
-  E extends NodeElement = NodeElement,
-> = SvelteDirective<P, E>
 
 export declare type VoidFunction = () => void
 
@@ -101,3 +92,20 @@ export declare type RequiredDeep<T> = {
 export declare type ReadonlyDeep<T> = {
   readonly [P in keyof T]: T[P] extends object ? ReadonlyDeep<T[P]> : T[P]
 }
+
+type SNum = '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9'
+type SNum1 = '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9'
+export declare type Num = `${SNum}` | `${SNum1}${SNum}`
+
+type ArgsObject = {
+  readonly [K in Num]?: string | number
+}
+
+export declare type StringInjection<
+  V extends string,
+  A extends ArgsObject,
+> = V extends `${infer L}$${infer K1 extends Num}${infer R}`
+  ? A[K1] extends string
+    ? StringInjection<`${L}"${A[K1]}"${R}`, Omit<A, K1>>
+    : StringInjection<`${L}${A[K1]}${R}`, Omit<A, K1>>
+  : V

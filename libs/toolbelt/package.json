@@ -1,6 +1,6 @@
 {
   "name": "@vulppi/toolbelt",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "license": "MIT",
   "private": false,
   "author": {
@@ -34,15 +34,15 @@
     "pub:beta": "npm publish --access public --tag beta"
   },
   "devDependencies": {
-    "@types/node": "^18.11.9",
+    "@types/node": "^18.15.11",
     "npm-run-all": "^4.1.5",
-    "rimraf": "^3.0.2",
+    "rimraf": "^4.4.1",
     "scripts": "workspace:*",
-    "typescript": "^4.9.3"
+    "typescript": "^5.0.3"
   },
   "dependencies": {
-    "esbuild": "^0.15.14",
-    "esbuild-node-externals": "^1.5.0",
+    "esbuild": "^0.17.15",
+    "esbuild-node-externals": "^1.7.0",
     "minimist": "^1.2.8"
   }
 }
