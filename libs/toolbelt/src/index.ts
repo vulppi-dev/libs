@@ -17,26 +17,6 @@ export declare type NodeElement = Element | HTMLElement | SVGElement
 export declare type Unstring<K extends string> = K | Omit<string, K>
 
 /**
- * Svelte directive typing
- */
-export declare interface SvelteDirective<
-  P extends any = any,
-  E extends NodeElement = NodeElement,
-> {
-  (node: E, params: P):
-    | {
-        update?: (params: P) => void
-        destroy?: () => void
-      }
-    | undefined
-    | void
-}
-
-export declare type VoidFunction = () => void
-
-export declare type UnsubscribeList = (() => void)[]
-
-/**
  * Union of values of an array
  */
 export declare type ValuesOf<T extends readonly any[]> = T[number]
