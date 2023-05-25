@@ -1,6 +1,6 @@
 {
   "name": "@vulppi/toolbelt",
-  "version": "0.4.0",
+  "version": "0.4.2",
   "license": "MIT",
   "private": false,
   "author": {
@@ -10,39 +10,41 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/vulppi-dev/libs.git",
-    "directory": "libs/template"
+    "directory": "libs/toolbelt"
   },
   "keywords": [
-    "tree",
-    "node"
+    "node",
+    "typescript",
+    "toolbelt",
+    "vulppi",
+    "tools",
+    "utils",
+    "utilities",
+    "helpers"
   ],
   "type": "module",
   "main": "dist/index.cjs",
   "types": "dist/index.d.ts",
   "module": "dist/index.mjs",
-  "bin": {
-    "vp-build": "bin/builder.mjs"
-  },
   "scripts": {
-    "build": "run-s clear build:all",
+    "build": "run-s clear build:*",
     "clear": "rimraf dist",
-    "build:all": "run-p build:bundle build:types",
-    "build:bundle": "scripts-build",
+    "build:esm": "esbuild --bundle --minify --target=node18 --platform=node --format=esm --packages=external --out-extension:.js=.mjs --outdir=dist src/index.ts",
+    "build:cjs": "esbuild --bundle --minify --target=node18 --platform=node --format=cjs --packages=external --out-extension:.js=.cjs --outdir=dist src/index.ts",
     "build:types": "tsc",
     "pub": "npm publish --access public",
-    "pub:alpha": "npm publish --access public --tag alpha",
-    "pub:beta": "npm publish --access public --tag beta"
-  },
-  "devDependencies": {
-    "@types/node": "^18.15.11",
-    "npm-run-all": "^4.1.5",
-    "rimraf": "^4.4.1",
-    "scripts": "workspace:*",
-    "typescript": "^5.0.3"
+    "pub:tag": "npm publish --access public --tag"
   },
   "dependencies": {
-    "esbuild": "^0.17.15",
-    "esbuild-node-externals": "^1.7.0",
-    "minimist": "^1.2.8"
+    "esbuild": "^0.17.19"
+  },
+  "devDependencies": {
+    "@types/node": "^20.2.4",
+    "npm-run-all": "^4.1.5",
+    "rimraf": "^5.0.1",
+    "typescript": "^5.0.4"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }
