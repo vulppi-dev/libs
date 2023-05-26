@@ -1,0 +1,19 @@
+{
+  "exclude": ["node_modules", "**/*.test.*", "**/*.spec.*"],
+  "include": ["src/**/*.ts"],
+  "compilerOptions": {
+    "allowJs": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "isolatedModules": true,
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "target": "ESNext",
+    "baseUrl": "src",
+    "outDir": "dist"
+  }
+}
