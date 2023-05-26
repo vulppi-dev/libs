@@ -13,9 +13,9 @@ export const unionSerialFunctions =
   () => {
     for (const fn of fns) {
       if (Array.isArray(fn)) {
-        const rfn: typeof fn[0] = fn.shift()
+        const rfn: (typeof fn)[0] = fn.shift()
 
-        rfn(...(fn as Array<typeof fn[1]>))
+        rfn(...(fn as Array<(typeof fn)[1]>))
       } else {
         fn && fn()
       }
