@@ -8,10 +8,10 @@
     "declaration": true,
     "emitDeclarationOnly": true,
     "isolatedModules": true,
-    "moduleResolution": "node",
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "strict": true,
+    "moduleResolution": "node",
     "target": "ESNext",
     "baseUrl": "src",
     "outDir": "dist"
