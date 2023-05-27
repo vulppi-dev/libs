@@ -24,6 +24,6 @@ data1.counter = 0
 setInterval(() => {
   console.log('trigger data1')
   data1.counter++
-  // console.log('trigger data2')
-  // data2.counter += 4
+  console.log('trigger data2')
+  data2.counter += 1.5
 }, 4000)

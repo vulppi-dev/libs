@@ -89,19 +89,16 @@ export class SyncClient {
     })
     this._io.on('message', (bff) => {
       if (!(bff instanceof Buffer)) return
-      const { data, command, agent, key } = deserializeObject(
-        bff,
-      ) as CommandData
-      const flags = this._flagsMap.get(key) || {}
+      const { data, command, key } = deserializeObject(bff) as CommandData
+      if (!this._flagsMap.has(key)) {
+        this._flagsMap.set(key, {})
+      }
+      const flags = this._flagsMap.get(key)!
 
-      console.log(data, command, agent, key)
       if (command === 'set') {
-        const dataMap = this._dataMap.get(key)
-        flags.server = agent === 'server'
-        if (dataMap) {
-          Object.assign(dataMap, data)
-        }
-        flags.server = false
+        flags.server = true
+        const dataMap = this._dataMap.get(key)!
+        Object.assign(dataMap, data)
       }
     })
     this._io.on('close', () => {
@@ -114,7 +111,10 @@ export class SyncClient {
 
   private _checkAndSend<T extends Record<string, any>>(data: T, key: string) {
     const flags = this._flagsMap.get(key) || {}
-    if (flags.server) return
+    if (flags.server) {
+      flags.server = false
+      return
+    }
     this._send({
       data,
       key,

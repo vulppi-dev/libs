@@ -1,3 +1,4 @@
+import { promiseDelay } from '@vulppi/toolbelt'
 import type { DataKey } from './tools'
 import { diff, type Operation as Op } from 'just-diff'
 import _ from 'lodash'
@@ -15,27 +16,13 @@ function buildOperations(
   after: Record<string, any>,
 ) {
   return diff(before, after)
-  // .map((d) => {
-  //   if (d.op === 'replace' && typeof d.value === 'number') {
-  //     const oldValue = _.get(before, d.path)
-  //     if (typeof oldValue === 'number') {
-  //       return {
-  //         op: 'increment',
-  //         path: d.path,
-  //         value: d.value - oldValue,
-  //       } as Operation
-  //     }
-  //   }
-
-  //   return d as Operation
-  // })
 }
 
 export abstract class SyncProvider {
   private _dataMap = new Map<string, Record<string, any>>()
   private _lockedMap = new Map<string, Record<string, any>>()
   private _lockMap = new Map<string, boolean>()
-  private _waitMap = new Map<string, VoidFunction[]>()
+  private _waitMap = new Map<string, (() => Promise<void>)[]>()
 
   get dataMap() {
     return this._dataMap
@@ -46,9 +33,6 @@ export abstract class SyncProvider {
     value: T,
     context?: Record<string, any>,
   ) {
-    // TODO: implement concurrency list
-    let res: boolean = false
-
     if (!this._dataMap.has(key)) {
       await this.set(key, buildOperations({}, value), context)
       return voidFunction
@@ -58,17 +42,16 @@ export abstract class SyncProvider {
       this._waitMap.set(key, [])
     }
     const listPromise = this._waitMap.get(key)!
+    const locked = !!this._lockMap.get(key) || !!listPromise.length
 
     const callSet = async () => {
-      !listPromise.length &&
-        this._lockedMap.set(key, await this.get(key, context))
-
+      !locked && this._lockedMap.set(key, await this.get(key, context))
       const prev = this._lockedMap.get(key) || (await this.get(key, context))
-
+      this._lockMap.set(key, true)
       await this.set(key, buildOperations(prev, value), context)
-      return () => {
+      return async () => {
         const cb = listPromise.shift()
-        cb?.()
+        await cb?.()
         if (!listPromise.length) {
           this._lockMap.delete(key)
           this._lockedMap.delete(key)
@@ -76,16 +59,30 @@ export abstract class SyncProvider {
       }
     }
 
-    const locked = !!this._lockMap.get(key) || !!listPromise.length
-
-    console.log('locked', locked, listPromise.length)
     if (locked) {
       let resolve: VoidFunction | null = null
-      const promise = new Promise<void>((res) => {
-        resolve = res
+      const promise = new Promise<void>((res, rej) => {
+        let tid: NodeJS.Timeout | null = null
+
+        resolve = () => {
+          tid && clearTimeout(tid)
+          res()
+        }
+
+        tid = setTimeout(() => {
+          rej(new Error('timeout'))
+        }, 20000)
       })
-      listPromise.push(() => {
-        resolve?.()
+      listPromise.push(async () => {
+        let trying = 5
+        do {
+          if (!resolve) {
+            trying--
+            await promiseDelay(100)
+            continue
+          }
+          resolve?.()
+        } while (trying)
       })
       await promise
     }
@@ -123,9 +120,6 @@ export class MemoryProvider extends SyncProvider {
     context?: Record<string, any>,
   ) {
     const value = structuredClone(this.dataMap.get(key) || {})
-
-    console.log(operations)
-
     operations.forEach((op) => {
       switch (op.op) {
         case 'add':
@@ -144,7 +138,6 @@ export class MemoryProvider extends SyncProvider {
       }
     })
 
-    console.log('value', value)
     this.dataMap.set(key, value)
   }
 

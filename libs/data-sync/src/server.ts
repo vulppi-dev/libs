@@ -223,9 +223,8 @@ export class SyncServer {
 
           const dataToSend = await this._provider.get(key, context)
           clients.forEach((client) => {
-            if (client.readyState !== client.OPEN || client === socket) return
+            if (client.readyState !== client.OPEN) return
 
-            console.log('toSend', dataToSend)
             client.send(
               serializeObject({
                 command: 'set',
