@@ -186,7 +186,7 @@ export class SyncServer {
   }
 
   private _loadClient(socket: WebSocket, context: Record<string, any>) {
-    socket.on('message', (bff) => {
+    socket.on('message', async (bff) => {
       if (!(bff instanceof Buffer)) return
 
       const { command, agent, data, key } = deserializeObject<CommandData>(bff)
@@ -195,7 +195,6 @@ export class SyncServer {
       switch (command) {
         case 'get':
         case 'bind':
-          const currentData = this._provider.get(key, context)
           if (!this._clientMap.has(key)) {
             this._clientMap.set(key, new Set())
           }
@@ -207,7 +206,7 @@ export class SyncServer {
               command: 'set',
               agent: 'server',
               key,
-              data: currentData,
+              data: await this._provider.get(key, context),
             }),
           )
           break
@@ -215,19 +214,28 @@ export class SyncServer {
         case 'update':
           clients = this._clientMap.get(key)
           if (!clients) return
-          this._provider.set(key, data || {}, context)
+
+          const end = await this._provider.concurrencySet(
+            key,
+            data || {},
+            context,
+          )
+
+          const dataToSend = await this._provider.get(key, context)
           clients.forEach((client) => {
             if (client.readyState !== client.OPEN || client === socket) return
 
+            console.log('toSend', dataToSend)
             client.send(
               serializeObject({
                 command: 'set',
                 agent: 'server',
                 key,
-                data,
+                data: dataToSend,
               }),
             )
           })
+          end()
           break
         case 'unbind':
           clients = this._clientMap.get(key)
@@ -236,7 +244,7 @@ export class SyncServer {
 
           if (clients.size === 0) {
             this._clientMap.delete(key)
-            this._provider.clear(key)
+            await this._provider.clear(key)
           }
           break
       }

@@ -1,3 +1,5 @@
+export { subscribe, snapshot } from 'valtio/vanilla'
+
 import type { ClientRequestArgs } from 'http'
 import type { ClientOptions } from 'isomorphic-ws'
 import { WebSocket } from 'isomorphic-ws'
@@ -13,7 +15,7 @@ export interface CommandData {
 }
 
 function parseKey(key: string, namespace: string = 'default') {
-  if (!/^[a-z0-9_-$]+:[a-z0-9_-$]+$/i.test(key))
+  if (!/^[a-z0-9_\-\$]+:[a-z0-9_\-\$]+$/i.test(key))
     throw new Error(
       'Invalid key format. Key must be in format of <collection>:<id> (e.g. user:1)',
     )
@@ -25,6 +27,9 @@ export class SyncClient {
   private _io: WebSocket
   private _dataMap = new Map<string, Record<string, any>>()
   private _unsubMap = new Map<string, VoidFunction>()
+  private _flagsMap = new Map<string, Record<string, boolean>>()
+
+  private _preSendPool = new Set<CommandData>()
 
   constructor(uri: string | URL, opt?: ClientOptions | ClientRequestArgs) {
     this._io = new WebSocket(uri, {
@@ -42,13 +47,11 @@ export class SyncClient {
     namespace?: string,
   ) {
     const safeKey = parseKey(key, namespace)
-    this._io.send(
-      serializeObject({
-        key: safeKey,
-        agent: 'client',
-        command: 'get',
-      }),
-    )
+    this._send({
+      key: safeKey,
+      agent: 'client',
+      command: 'get',
+    })
 
     let proxyData: T
 
@@ -79,18 +82,26 @@ export class SyncClient {
 
   private _prepare() {
     this._io.on('open', () => {
-      console.log('open')
+      this._preSendPool.forEach((data) => {
+        this._send(data)
+      })
+      this._preSendPool.clear()
     })
     this._io.on('message', (bff) => {
       if (!(bff instanceof Buffer)) return
-      const { data, command, key } = deserializeObject(bff) as CommandData
-      // TODO: implement something with agent
+      const { data, command, agent, key } = deserializeObject(
+        bff,
+      ) as CommandData
+      const flags = this._flagsMap.get(key) || {}
 
+      console.log(data, command, agent, key)
       if (command === 'set') {
         const dataMap = this._dataMap.get(key)
+        flags.server = agent === 'server'
         if (dataMap) {
           Object.assign(dataMap, data)
         }
+        flags.server = false
       }
     })
     this._io.on('close', () => {
@@ -102,14 +113,14 @@ export class SyncClient {
   }
 
   private _checkAndSend<T extends Record<string, any>>(data: T, key: string) {
-    this._io.send(
-      serializeObject({
-        data,
-        key,
-        agent: 'client',
-        command: 'set',
-      }),
-    )
+    const flags = this._flagsMap.get(key) || {}
+    if (flags.server) return
+    this._send({
+      data,
+      key,
+      agent: 'client',
+      command: 'set',
+    })
   }
 
   private _unbindData(key: string) {
@@ -117,6 +128,14 @@ export class SyncClient {
     unsub?.()
     this._unsubMap.delete(key)
     this._dataMap.delete(key)
-    this._io.send(serializeObject({ key, agent: 'client', command: 'unbind' }))
+    this._send({ key, agent: 'client', command: 'unbind' })
+  }
+
+  private _send(data: CommandData) {
+    if (this._io.readyState === WebSocket.OPEN) {
+      this._io.send(serializeObject(data))
+    } else {
+      this._preSendPool.add(data)
+    }
   }
 }
