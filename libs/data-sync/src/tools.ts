@@ -38,8 +38,15 @@ export interface ValidationData {
   params: URLSearchParams
 }
 
+export type DataKey = `${string}:${string}:${string}`
+
 export interface CommandData {
   command: string
   agent: 'server' | 'client' | 'anonymous'
-  data: Record<string, any>
+  key: DataKey
+  data?: Record<string, any>
 }
+
+export type ValidationFunction = (
+  data: ValidationData,
+) => Promise<Record<string, any> | undefined> | Record<string, any> | undefined

@@ -1,18 +1,14 @@
-export type { ValidationData } from './tools'
+export type { CommandData, ValidationData, ValidationFunction } from './tools'
 
-import { Nullable, deserializeObject } from '@vulppi/toolbelt'
+import { serializeObject, type Nullable } from '@vulppi/toolbelt'
+import { deserializeObject } from '@vulppi/toolbelt'
 import { Server } from 'http'
 import { URLSearchParams } from 'url'
 import type { ServerOptions, WebSocket } from 'ws'
 import { WebSocketServer } from 'ws'
-import {
-  CommandData,
-  HEADER_KEY,
-  HEADER_VALUE,
-  ValidationData,
-  clearOptions,
-  genGUID,
-} from './tools'
+import type { CommandData, ValidationData, ValidationFunction } from './tools'
+import { HEADER_KEY, HEADER_VALUE, clearOptions, genGUID } from './tools'
+import { MemoryProvider, type SyncProvider } from 'provider'
 
 /**
  * The SyncServer class is a server for data synchronization.
@@ -54,6 +50,8 @@ export class SyncServer {
   private _io: WebSocketServer
   private _validation: ValidationFunction | undefined
   private _heartbeatInterval: number = 10000
+  private _clientMap: Map<string, Set<WebSocket>> = new Map()
+  private _provider: SyncProvider = new MemoryProvider()
 
   constructor(
     opt: Omit<ServerOptions, 'port' | 'noServer'> | undefined,
@@ -66,6 +64,71 @@ export class SyncServer {
     this._io = new WebSocketServer({ ...opt, server: this._srv }, cb)
     this._prepare()
     this._startHeartbeat()
+  }
+
+  /**
+   * Set the heartbeat interval in seconds.
+   *
+   * @default 10
+   * @param interval
+   */
+  public setHeartbeatInterval(interval: number) {
+    this._heartbeatInterval = interval * 1000
+  }
+
+  /**
+   * Validation function can be used to validate the client,
+   * if the function returns false, the client is disconnected.
+   *
+   * @param validation
+   */
+  public setValidation(validation: ValidationFunction) {
+    this._validation = validation
+  }
+
+  /**
+   * Case you want to use a provider for persist data.
+   *
+   * @example
+   * ```ts
+   * import { SyncServer, MemoryProvider } from '@vulppi/data-sync'
+   *
+   * const server = new SyncServer()
+   * server.setProvider(new MemoryProvider())
+   * ```
+   *
+   * @param provider
+   */
+  public setProvider(provider: SyncProvider) {
+    this._provider = provider
+  }
+
+  /**
+   * Start the server.
+   *
+   * @param port
+   * @param cb
+   */
+  public listen(port: number, cb?: () => void) {
+    this._srv.listen(port, cb)
+  }
+
+  /**
+   * Close the server.
+   *
+   * @param cb
+   */
+  public onClose(cb: () => void) {
+    this._srv.on('close', cb)
+  }
+
+  /**
+   * Error event.
+   *
+   * @param cb
+   */
+  public onError(cb: (err: Error) => void) {
+    this._srv.on('error', cb)
   }
 
   private _prepare() {
@@ -118,9 +181,57 @@ export class SyncServer {
     socket.on('message', (bff) => {
       if (!(bff instanceof Buffer)) return
 
-      const { command, agent, data } = deserializeObject<CommandData>(bff)
+      const { command, agent, data, key } = deserializeObject<CommandData>(bff)
+      let clients: Set<WebSocket> | undefined
 
-      console.log(command, agent, data)
+      switch (command) {
+        case 'get':
+        case 'bind':
+          const currentData = this._provider.get(key, context)
+          if (!this._clientMap.has(key)) {
+            this._clientMap.set(key, new Set())
+          }
+          clients = this._clientMap.get(key)!
+          clients.add(socket)
+
+          socket.send(
+            serializeObject({
+              command: 'set',
+              agent: 'server',
+              key,
+              data: currentData,
+            }),
+          )
+          break
+        case 'set':
+        case 'update':
+          clients = this._clientMap.get(key)
+          if (!clients) return
+          this._provider.set(key, data || {}, context)
+          clients.forEach((client) => {
+            if (client.readyState !== client.OPEN || client === socket) return
+
+            client.send(
+              serializeObject({
+                command: 'set',
+                agent: 'server',
+                key,
+                data,
+              }),
+            )
+          })
+          break
+        case 'unbind':
+          clients = this._clientMap.get(key)
+          if (!clients) return
+          clients.delete(socket)
+
+          if (clients.size === 0) {
+            this._clientMap.delete(key)
+            this._provider.clear(key)
+          }
+          break
+      }
     })
   }
 
@@ -142,56 +253,4 @@ export class SyncServer {
       this._startHeartbeat()
     }, this._heartbeatInterval)
   }
-
-  /**
-   * Set the heartbeat interval in seconds.
-   *
-   * @default 10
-   * @param interval
-   */
-  public setHeartbeatInterval(interval: number) {
-    this._heartbeatInterval = interval * 1000
-  }
-
-  /**
-   * Validation function can be used to validate the client,
-   * if the function returns false, the client is disconnected.
-   *
-   * @param validation
-   */
-  public setValidation(validation: ValidationFunction) {
-    this._validation = validation
-  }
-
-  /**
-   * Start the server.
-   *
-   * @param port
-   * @param cb
-   */
-  public listen(port: number, cb?: () => void) {
-    this._srv.listen(port, cb)
-  }
-
-  /**
-   * Close the server.
-   *
-   * @param cb
-   */
-  public onClose(cb: () => void) {
-    this._srv.on('close', cb)
-  }
-
-  /**
-   * Error event.
-   *
-   * @param cb
-   */
-  public onError(cb: (err: Error) => void) {
-    this._srv.on('error', cb)
-  }
 }
-
-export type ValidationFunction = (
-  data: ValidationData,
-) => Promise<Record<string, any> | undefined> | Record<string, any> | undefined
