@@ -6,7 +6,7 @@ import _ from 'lodash'
 const voidFunction = () => {}
 
 type Operation = {
-  op: Op | 'increment'
+  op: Op
   path: Array<string | number>
   value: any
 }
@@ -24,6 +24,7 @@ export abstract class SyncProvider {
   private _lockMap = new Map<string, boolean>()
   private _waitMap = new Map<string, (() => Promise<void>)[]>()
 
+  //
   get dataMap() {
     return this._dataMap
   }
@@ -33,14 +34,16 @@ export abstract class SyncProvider {
     value: T,
     context?: Record<string, any>,
   ) {
+    // Not exists key, apply operations and return
     if (!this._dataMap.has(key)) {
-      await this.set(key, buildOperations({}, value), context)
+      await this._applyOperations(key, buildOperations({}, value), context)
       return voidFunction
     }
 
     if (!this._waitMap.has(key)) {
       this._waitMap.set(key, [])
     }
+    // Test if operation is locked
     const listPromise = this._waitMap.get(key)!
     const locked = !!this._lockMap.get(key) || !!listPromise.length
 
@@ -48,7 +51,7 @@ export abstract class SyncProvider {
       !locked && this._lockedMap.set(key, await this.get(key, context))
       const prev = this._lockedMap.get(key) || (await this.get(key, context))
       this._lockMap.set(key, true)
-      await this.set(key, buildOperations(prev, value), context)
+      await this._applyOperations(key, buildOperations(prev, value), context)
       return async () => {
         const cb = listPromise.shift()
         await cb?.()
@@ -61,6 +64,7 @@ export abstract class SyncProvider {
 
     if (locked) {
       let resolve: VoidFunction | null = null
+      // If locker wait for unlock
       const promise = new Promise<void>((res, rej) => {
         let tid: NodeJS.Timeout | null = null
 
@@ -69,12 +73,14 @@ export abstract class SyncProvider {
           res()
         }
 
+        // Timeout if not unlock
         tid = setTimeout(() => {
           rej(new Error('timeout'))
         }, 20000)
       })
       listPromise.push(async () => {
         let trying = 5
+        // Protect for async resolve call
         do {
           if (!resolve) {
             trying--
@@ -89,6 +95,32 @@ export abstract class SyncProvider {
     return await callSet()
   }
 
+  private async _applyOperations(
+    key: DataKey,
+    operations: Operation[],
+    context?: Record<string, any>,
+  ) {
+    const value = structuredClone(this.dataMap.get(key) || {})
+
+    operations.forEach((op) => {
+      switch (op.op) {
+        case 'add':
+        case 'replace':
+          _.set(value, op.path, op.value)
+          break
+        case 'remove':
+          _.unset(value, op.path)
+          break
+      }
+    })
+
+    this.dataMap.set(key, value)
+
+    if (operations.length) {
+      this.set(key, value, context)
+    }
+  }
+
   abstract get<T extends Record<string, any>>(
     key: DataKey,
     context?: Record<string, any>,
@@ -96,7 +128,7 @@ export abstract class SyncProvider {
 
   abstract set(
     key: DataKey,
-    operations: Operation[],
+    value: Record<string, any>,
     context?: Record<string, any>,
   ): Promise<void> | void
 
@@ -116,30 +148,9 @@ export class MemoryProvider extends SyncProvider {
 
   async set(
     key: DataKey,
-    operations: Operation[],
+    data: Record<string, any>,
     context?: Record<string, any>,
-  ) {
-    const value = structuredClone(this.dataMap.get(key) || {})
-    operations.forEach((op) => {
-      switch (op.op) {
-        case 'add':
-        case 'replace':
-          _.set(value, op.path, op.value)
-          break
-        case 'remove':
-          _.unset(value, op.path)
-          break
-        case 'increment':
-          const oldValue = _.get(value, op.path)
-          if (typeof oldValue === 'number') {
-            _.set(value, op.path, oldValue + op.value)
-          }
-          break
-      }
-    })
-
-    this.dataMap.set(key, value)
-  }
+  ) {}
 
   async clear(key: `${string}:${string}:${string}`) {
     return this.dataMap.delete(key)

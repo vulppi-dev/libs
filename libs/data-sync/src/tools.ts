@@ -8,6 +8,9 @@ export function clearOptions(opt: any) {
   delete opt.noServer
 }
 
+/**
+ * Generate a random GUID.
+ */
 export function genGUID(size: number = 20) {
   let id = ''
   for (let i = 0; i < size; i++) {

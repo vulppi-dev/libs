@@ -1,29 +1,28 @@
 import { SyncClient, subscribe } from '../src'
+import { createInterface } from 'readline'
 
-const client1 = new SyncClient('ws://localhost:3000/sync')
+const client = new SyncClient('ws://localhost:3000/sync')
+const [data] = client.getBindData('test:test')
 
-const client2 = new SyncClient('ws://localhost:3000/sync')
-
-const [data1] = client1.getBindData('user:1')
-const [data2] = client2.getBindData('user:1')
-
-subscribe(data2, () => {
-  console.log('observer data2', data2)
+subscribe(data, () => {
+  console.log('changed:', data)
 })
 
-subscribe(data1, () => {
-  console.log('observer data1', data1)
+const reader = createInterface({
+  input: process.stdin,
+  output: process.stdout,
 })
 
-console.log('data1', data1)
-console.log('data2', data2)
+reader.on('line', (line) => {
+  const [key, ...value] = line.split(' ')
+  if (['q', 'quit', 'exit'].includes(key)) {
+    process.exit(0)
+  }
 
-data1.name = 'John'
-data1.counter = 0
-
-setInterval(() => {
-  console.log('trigger data1')
-  data1.counter++
-  console.log('trigger data2')
-  data2.counter += 1.5
-}, 4000)
+  const v = value.join(' ')
+  if (key === 'delete') {
+    delete data[v]
+  } else {
+    data[key] = ['true', 'false'].includes(v) ? v === 'true' : +v || v
+  }
+})

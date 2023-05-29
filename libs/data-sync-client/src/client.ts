@@ -6,6 +6,7 @@ import { WebSocket } from 'isomorphic-ws'
 import { deserializeObject, serializeObject } from '@vulppi/toolbelt'
 import { proxy, subscribe } from 'valtio/vanilla'
 import { proxyWithHistory } from 'valtio/utils'
+import equal from 'deep-equal'
 
 export interface CommandData {
   command: string
@@ -19,10 +20,44 @@ function parseKey(key: string, namespace: string = 'default') {
     throw new Error(
       'Invalid key format. Key must be in format of <collection>:<id> (e.g. user:1)',
     )
-
   return `${namespace}:${key}`
 }
 
+/**
+ * Sync data client
+ *
+ * @example
+ * ```ts
+ * // server.ts
+ * import { SyncServer } from '@vulppi/data-sync'
+ *
+ * const server = new SyncServer()
+ * server.listen(8080)
+ *
+ * // client1.ts
+ * import { SyncClient } from '@vulppi/data-sync-client'
+ *
+ * const client = new SyncClient('ws://localhost:8080')
+ *
+ * const object = client.getData('objectId')
+ *
+ * object.foo = 'bar'
+ * object.counter++
+ *
+ * // client2.ts
+ * import { SyncClient } from '@vulppi/data-sync-client'
+ *
+ * const client = new SyncClient('ws://localhost:8080')
+ *
+ * const object = client.getData('objectId')
+ *
+ * console.log(object.foo) // bar
+ * console.log(object.counter) // 1
+ * ```
+ *
+ * @author Vulppi
+ * @license MIT
+ */
 export class SyncClient {
   private _io: WebSocket
   private _dataMap = new Map<string, Record<string, any>>()
@@ -42,6 +77,9 @@ export class SyncClient {
     this._prepare()
   }
 
+  /**
+   * Get data binded to the Key from the server.
+   */
   public getBindData<T extends Record<string, any>>(
     key: `${string}:${string}`,
     namespace?: string,
@@ -76,6 +114,10 @@ export class SyncClient {
     }) as [T, VoidFunction] & { data: T; unbind: VoidFunction }
   }
 
+  /**
+   * Get data binded to the Key from the server.
+   * This function will return a proxy with history.
+   */
   public getHistory(key: `${string}:${string}`, namespace: string = 'default') {
     return proxyWithHistory(this.getBindData(key, namespace))
   }
@@ -94,11 +136,18 @@ export class SyncClient {
         this._flagsMap.set(key, {})
       }
       const flags = this._flagsMap.get(key)!
-
       if (command === 'set') {
-        flags.server = true
         const dataMap = this._dataMap.get(key)!
+        flags.server = !equal(dataMap, data)
+
+        const dataMapKeys = Object.keys(dataMap)
+        const dataKeys = Object.keys(data || {})
+
+        const keysToRemove = dataMapKeys.filter((k) => !dataKeys.includes(k))
         Object.assign(dataMap, data)
+        keysToRemove.forEach((k) => {
+          delete dataMap[k]
+        })
       }
     })
     this._io.on('close', () => {
