@@ -1,0 +1,47 @@
+# Vulppi React Hooks
+
+## Installation
+
+```bash
+npm install @vulppi/react-hooks
+```
+
+## Usage
+
+```tsx
+import { useTimer } from '@vulppi/react-hooks'
+
+const Component = () => {
+  const [time, { start, stop, restart }] = useTimer()
+
+  return (
+    <div>
+      <div>{time}</div>
+      <button onClick={start}>Start</button>
+      <button onClick={stop}>Stop</button>
+      <button onClick={restart}>Restart</button>
+    </div>
+  )
+}
+```
+
+## Hooks table
+
+| Hook                                                       | Description                                      |
+| ---------------------------------------------------------- | ------------------------------------------------ |
+| [useBoolean](./src/use-boolean/README.md)                  | A hook to create and control a boolean.          |
+| [useClickOutside](./src/use-click-outside/README.md)       | A hook to detect click outside of an element.    |
+| [useDebounce](./src/use-debounce/README.md)                | A hook to debounce a function.                   |
+| [useDebounceTrigger](./src/use-debounce-trigger/README.md) | A hook to debounce before triggering a function. |
+| [useInterval](./src/use-interval/README.md)                | A hook to create and control an interval.        |
+| [useIsMounted](./src/use-is-mounted/README.md)             | A hook to check if component is mounted.         |
+| [useMediaQuery](./src/use-media-query/README.md)           | A hook to check if media query matches.          |
+| [useMergeRef](./src/use-merge-ref/README.md)               | A hook to merge multiple refs.                   |
+| [useRerender](./src/use-rerender/README.md)                | A hook to force component to rerender.           |
+| [useStateDebounce](./src/use-state-debounce/README.md)     | A hook to debounce a state.                      |
+| [useTimeout](./src/use-timeout/README.md)                  | A hook to call function after a timeout.         |
+| [useTimer](./src/use-timer/README.md)                      | A hook to create and control a timer.            |
+
+## License
+
+MIT © [Vulppi](https://vulppi.dev)
