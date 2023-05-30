@@ -1,0 +1,44 @@
+{
+  "name": "@vulppi/svelte-directives",
+  "version": "0.0.1",
+  "license": "MIT",
+  "private": false,
+  "author": {
+    "name": "Renato Rodrigues",
+    "email": "renato@vulppi.dev"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vulppi-dev/libs.git",
+    "directory": "libs/svelte-directives"
+  },
+  "keywords": [],
+  "type": "module",
+  "main": "dist/index.cjs",
+  "types": "dist/index.d.ts",
+  "module": "dist/index.mjs",
+  "scripts": {
+    "build": "run-s clear build:*",
+    "clear": "rimraf dist",
+    "build:esm": "esbuild --bundle --minify --target=node18 --platform=node --format=esm --packages=external --out-extension:.js=.mjs --outdir=dist src/index.ts",
+    "build:cjs": "esbuild --bundle --minify --target=node18 --platform=node --format=cjs --packages=external --out-extension:.js=.cjs --outdir=dist src/index.ts",
+    "build:types": "tsc",
+    "test": "node --loader esbuild-register/loader -r esbuild-register test/index.ts",
+    "pub": "npm publish --access public",
+    "pub:tag": "npm publish --access public --tag"
+  },
+  "dependencies": {
+    "@vulppi/toolbelt": "^0.5.0",
+    "esbuild": "^0.17.19"
+  },
+  "devDependencies": {
+    "@types/node": "^20.2.5",
+    "esbuild-register": "^3.4.2",
+    "npm-run-all": "^4.1.5",
+    "rimraf": "^5.0.1",
+    "typescript": "^5.0.4"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
