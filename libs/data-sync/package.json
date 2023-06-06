@@ -1,6 +1,6 @@
 {
   "name": "@vulppi/data-sync",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "license": "MIT",
   "private": false,
   "author": {
@@ -12,7 +12,17 @@
     "url": "git+https://github.com/vulppi-dev/libs.git",
     "directory": "libs/data-sync"
   },
-  "keywords": [],
+  "keywords": [
+    "data synchronization",
+    "real-time",
+    "data management",
+    "synchronization",
+    "server",
+    "websocket",
+    "ws",
+    "storage",
+    "collaboration"
+  ],
   "type": "module",
   "main": "dist/index.cjs",
   "types": "dist/index.d.ts",
