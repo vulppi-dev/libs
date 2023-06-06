@@ -3,6 +3,7 @@ export type {
   DataKey,
   ValidationData,
   ValidationFunction,
+  UserContext,
 } from './tools'
 
 import {
@@ -10,13 +11,24 @@ import {
   serializeObject,
   type Nullable,
 } from '@vulppi/toolbelt'
-import { Server } from 'http'
+import { IncomingMessage, Server } from 'http'
 import { MemoryProvider, type SyncProvider } from 'provider'
+import type { Duplex } from 'stream'
 import { URLSearchParams } from 'url'
 import type { ServerOptions, WebSocket } from 'ws'
 import { WebSocketServer } from 'ws'
-import type { CommandData, ValidationData, ValidationFunction } from './tools'
-import { HEADER_KEY, HEADER_VALUE, clearOptions, genGUID } from './tools'
+import {
+  HEADER_KEY,
+  HEADER_VALUE,
+  clearOptions,
+  genGUID,
+  safeGetMap,
+  type CommandData,
+  type DataKey,
+  type UserContext,
+  type ValidationData,
+  type ValidationFunction,
+} from './tools'
 
 /**
  * The SyncServer class is a server for data synchronization.
@@ -58,7 +70,7 @@ export class SyncServer {
   private _io: WebSocketServer
   private _validation: ValidationFunction | undefined
   private _heartbeatInterval: number = 10000
-  private _clientMap: Map<string, Set<WebSocket>> = new Map()
+  private _clientMap: Map<DataKey, Set<WebSocket>> = new Map()
   private _provider: SyncProvider = new MemoryProvider()
 
   constructor(
@@ -139,6 +151,15 @@ export class SyncServer {
     this._srv.on('error', cb)
   }
 
+  public handleUpgrade(
+    request: IncomingMessage,
+    socket: Duplex,
+    upgradeHead: Buffer,
+    callback: (client: WebSocket, request: IncomingMessage) => void,
+  ) {
+    this._io.handleUpgrade(request, socket, upgradeHead, callback)
+  }
+
   private _prepare() {
     this._io.on('connection', async (socket, req) => {
       // Verify if the client is a vulppi-datasync-client
@@ -150,7 +171,7 @@ export class SyncServer {
         return
       }
 
-      let context: Nullable<Record<string, any>> = {}
+      let context: Nullable<UserContext> = { id: '' }
       // Verify if the client is valid
       if (this._validation) {
         const validationData: ValidationData = {
@@ -178,6 +199,10 @@ export class SyncServer {
         return
       }
 
+      if (!context.id) {
+        context.id = genGUID()
+      }
+
       this._loadClient(socket, context)
     })
     this._io.on('error', (err) => {
@@ -185,20 +210,24 @@ export class SyncServer {
     })
   }
 
-  private _loadClient(socket: WebSocket, context: Record<string, any>) {
+  private _loadClient(socket: WebSocket, context: UserContext) {
+    socket.send(
+      serializeObject({
+        command: 'init',
+        data: context,
+        agent: 'server',
+      }),
+    )
+
     socket.on('message', async (bff) => {
       if (!(bff instanceof Buffer)) return
-
       const { command, agent, data, key } = deserializeObject<CommandData>(bff)
       let clients: Set<WebSocket> | undefined
 
       switch (command) {
         case 'get':
         case 'bind':
-          if (!this._clientMap.has(key)) {
-            this._clientMap.set(key, new Set())
-          }
-          clients = this._clientMap.get(key)!
+          clients = safeGetMap(key, this._clientMap, () => new Set())
           clients.add(socket)
 
           socket.send(
@@ -212,30 +241,41 @@ export class SyncServer {
           break
         case 'set':
         case 'update':
-          clients = this._clientMap.get(key)
-          if (!clients) return
+          clients = safeGetMap(key, this._clientMap, () => new Set())
+          if (!clients.size) return
+          try {
+            const end = await this._provider.concurrencySet(
+              key,
+              data || {},
+              context,
+            )
 
-          const end = await this._provider.concurrencySet(
-            key,
-            data || {},
-            context,
-          )
+            const dataToSend = await this._provider.get(key, context)
+            clients.forEach((client) => {
+              if (client.readyState !== client.OPEN) return
 
-          const dataToSend = await this._provider.get(key, context)
-          clients.forEach((client) => {
-            if (client.readyState !== client.OPEN) return
-
-            client.send(
+              client.send(
+                serializeObject({
+                  command: 'set',
+                  agent: 'server',
+                  key,
+                  data: dataToSend,
+                }),
+              )
+            })
+            end()
+          } catch (err: any) {
+            socket.send(
               serializeObject({
-                command: 'set',
+                command: 'error',
                 agent: 'server',
                 key,
-                data: dataToSend,
+                data: err.message || err,
               }),
             )
-          })
-          end()
+          }
           break
+        case 'leave':
         case 'unbind':
           clients = this._clientMap.get(key)
           if (!clients) return
@@ -243,10 +283,14 @@ export class SyncServer {
 
           if (clients.size === 0) {
             this._clientMap.delete(key)
-            await this._provider.clear(key)
+            await this._provider.clear(key, context)
           }
           break
       }
+    })
+
+    socket.on('close', () => {
+      this._provider.clearAll(context)
     })
   }
 

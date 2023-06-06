@@ -5,7 +5,7 @@ importers:
   libs/data-sync:
     dependencies:
       '@vulppi/toolbelt':
-        specifier: ^0.5.0
+        specifier: ^0.6.1
         version: link:../toolbelt
       esbuild:
         specifier: ^0.17.19
@@ -39,13 +39,13 @@ importers:
         specifier: ^5.0.1
         version: 5.0.1
       typescript:
-        specifier: ^5.0.4
-        version: 5.0.4
+        specifier: ^5.1.3
+        version: 5.1.3
 
   libs/data-sync-client:
     dependencies:
       '@vulppi/toolbelt':
-        specifier: ^0.5.0
+        specifier: ^0.6.1
         version: link:../toolbelt
       deep-equal:
         specifier: ^2.2.1
@@ -76,8 +76,8 @@ importers:
         specifier: ^5.0.1
         version: 5.0.1
       typescript:
-        specifier: ^5.0.4
-        version: 5.0.4
+        specifier: ^5.1.3
+        version: 5.1.3
 
   libs/node-tree:
     dependencies:
@@ -102,10 +102,13 @@ importers:
     dependencies:
       '@vulppi/toolbelt':
         specifier: ^0.5.0
-        version: link:../toolbelt
+        version: 0.5.0
       esbuild:
         specifier: ^0.17.19
         version: 0.17.19
+      react:
+        specifier: '>=18.0.0'
+        version: 18.2.0
     devDependencies:
       '@types/node':
         specifier: ^20.2.5
@@ -130,7 +133,7 @@ importers:
     dependencies:
       '@vulppi/toolbelt':
         specifier: ^0.5.0
-        version: link:../toolbelt
+        version: 0.5.0
       esbuild:
         specifier: ^0.17.19
         version: 0.17.19
@@ -153,13 +156,19 @@ importers:
 
   libs/toolbelt:
     dependencies:
-      esbuild:
-        specifier: ^0.17.19
-        version: 0.17.19
+      pako:
+        specifier: ^2.1.0
+        version: 2.1.0
     devDependencies:
       '@types/node':
         specifier: ^20.2.4
         version: 20.2.4
+      '@types/pako':
+        specifier: ^2.0.0
+        version: 2.0.0
+      esbuild:
+        specifier: ^0.17.19
+        version: 0.17.19
       npm-run-all:
         specifier: ^4.1.5
         version: 4.1.5
@@ -383,6 +392,10 @@ packages:
     resolution: {integrity: sha512-JJulVEQXmiY9Px5axXHeYGLSjhkZEnD+MDPDGbCbIAbMslkKwmygtZFy1X6s/075Yo94sf8GuSlFfPzysQrWZQ==}
     dev: true
 
+  /@types/pako@2.0.0:
+    resolution: {integrity: sha512-10+iaz93qR5WYxTo+PMifD5TSxiOtdRaxBf7INGGXMQgTCu8Z/7GYWYFUOS3q/G0nE5boj1r4FEB+WSy7s5gbA==}
+    dev: true
+
   /@types/prop-types@15.7.5:
     resolution: {integrity: sha512-JCB8C6SnDoQf0cNycqd/35A7MjcnK+ZTqE7judS6o7utxUCg6imJg3QK2qzHKszlTjcj2cn+NwMB2i96ubpj7w==}
     dev: true
@@ -404,6 +417,13 @@ packages:
     dependencies:
       '@types/node': 20.2.5
     dev: true
+
+  /@vulppi/toolbelt@0.5.0:
+    resolution: {integrity: sha512-OMjkXx/GZp5Ypj/EkzxHXlUNeTNuw71Jb5cRI9JMF+8iBQCSnS2FrKNzF1aeoR/9YBSdP06TbJb1W0TTAJZO4Q==}
+    engines: {node: '>=18.0.0'}
+    dependencies:
+      esbuild: 0.17.19
+    dev: false
 
   /ansi-regex@5.0.1:
     resolution: {integrity: sha512-quJQXlTSUGL2LH9SUXo8VwsY4soanhgo6LNSm84E1LBcE8s3O0wpdiRzyR9z/ZZJMlMWv37qOOb9pdJlMUEKFQ==}
@@ -1072,6 +1092,10 @@ packages:
       has-symbols: 1.0.3
       object-keys: 1.1.1
 
+  /pako@2.1.0:
+    resolution: {integrity: sha512-w+eufiZ1WuJYgPXbV/PO3NCMEc3xqylkKHzp8bxp1uW4qaSNQUkwmLLEc3kKsfz8lpV1F8Ht3U1Cm+9Srog2ug==}
+    dev: false
+
   /parse-json@4.0.0:
     resolution: {integrity: sha512-aOIos8bujGN93/8Ox/jPLh7RwVnPEysynVFE+fQZyg6jKELEHwzgKdLRFHUgXJL6kylijVSBC4BvN9OmsB48Rw==}
     engines: {node: '>=4'}
@@ -1324,6 +1348,12 @@ packages:
   /typescript@5.0.4:
     resolution: {integrity: sha512-cW9T5W9xY37cc+jfEnaUvX91foxtHkza3Nw3wkoF4sSlKn0MONdkdEndig/qPBWXNkmplh3NzayQzCiHM4/hqw==}
     engines: {node: '>=12.20'}
+    hasBin: true
+    dev: true
+
+  /typescript@5.1.3:
+    resolution: {integrity: sha512-XH627E9vkeqhlZFQuL+UsyAXEnibT0kWR2FWONlr4sTjvxyJYnyefgrkyECLzM5NenmKzRAy2rR/OlYLA1HkZw==}
+    engines: {node: '>=14.17'}
     hasBin: true
     dev: true
 

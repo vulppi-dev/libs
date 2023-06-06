@@ -1,6 +1,6 @@
 {
   "name": "@vulppi/toolbelt",
-  "version": "0.5.1",
+  "version": "0.6.2",
   "license": "MIT",
   "private": false,
   "author": {
@@ -26,18 +26,32 @@
   "main": "dist/index.cjs",
   "types": "dist/index.d.ts",
   "module": "dist/index.mjs",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs",
+      "types": "./dist/index.d.ts",
+      "node": "./dist/index.mjs",
+      "default": "./dist/index.js"
+    }
+  },
   "scripts": {
-    "build": "run-s clear build:*",
+    "build": "run-s clear build-all",
+    "build-all": "run-p build:*",
     "clear": "rimraf dist",
     "build:esm": "esbuild --bundle --minify --target=node18 --platform=node --format=esm --packages=external --out-extension:.js=.mjs --outdir=dist src/index.ts",
     "build:cjs": "esbuild --bundle --minify --target=node18 --platform=node --format=cjs --packages=external --out-extension:.js=.cjs --outdir=dist src/index.ts",
+    "build:iife": "esbuild --bundle --minify --target=node18 --platform=node --format=iife --packages=external  --outdir=dist src/index.ts",
     "build:types": "tsc",
     "pub": "npm publish --access public",
     "pub:tag": "npm publish --access public --tag"
   },
-  "dependencies": {},
+  "dependencies": {
+    "pako": "^2.1.0"
+  },
   "devDependencies": {
     "@types/node": "^20.2.4",
+    "@types/pako": "^2.0.0",
     "esbuild": "^0.17.19",
     "npm-run-all": "^4.1.5",
     "rimraf": "^5.0.1",

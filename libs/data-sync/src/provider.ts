@@ -1,7 +1,8 @@
 import { promiseDelay } from '@vulppi/toolbelt'
-import type { DataKey } from './tools'
-import { diff, type Operation as Op } from 'just-diff'
+import type { Operation as Op } from 'just-diff'
+import { diff } from 'just-diff'
 import _ from 'lodash'
+import type { DataKey, UserContext } from './tools'
 
 const voidFunction = () => {}
 
@@ -32,7 +33,7 @@ export abstract class SyncProvider {
   public async concurrencySet<T extends Record<string, any>>(
     key: DataKey,
     value: T,
-    context?: Record<string, any>,
+    context: UserContext,
   ) {
     // Not exists key, apply operations and return
     if (!this._dataMap.has(key)) {
@@ -79,15 +80,16 @@ export abstract class SyncProvider {
         }, 20000)
       })
       listPromise.push(async () => {
-        let trying = 5
+        let trying = 100
         // Protect for async resolve call
         do {
           if (!resolve) {
             trying--
-            await promiseDelay(100)
+            await promiseDelay(10)
             continue
           }
-          resolve?.()
+          resolve()
+          break
         } while (trying)
       })
       await promise
@@ -98,7 +100,7 @@ export abstract class SyncProvider {
   private async _applyOperations(
     key: DataKey,
     operations: Operation[],
-    context?: Record<string, any>,
+    context: UserContext,
   ) {
     const value = structuredClone(this.dataMap.get(key) || {})
 
@@ -123,36 +125,38 @@ export abstract class SyncProvider {
 
   abstract get<T extends Record<string, any>>(
     key: DataKey,
-    context?: Record<string, any>,
+    context: UserContext,
   ): Promise<T> | T
 
   abstract set(
     key: DataKey,
     value: Record<string, any>,
-    context?: Record<string, any>,
+    context: UserContext,
   ): Promise<void> | void
 
-  abstract clear(key: DataKey): Promise<boolean> | boolean
+  abstract clear(key: DataKey, context: UserContext): Promise<boolean> | boolean
+
+  abstract clearAll(
+    context: UserContext,
+  ): Promise<boolean | void> | boolean | void
 }
 
+/**
+ * Simple provider for store data in memory
+ */
 export class MemoryProvider extends SyncProvider {
-  async get<T extends Record<string, any>>(
-    key: DataKey,
-    context?: Record<string, any>,
-  ) {
+  async get<T extends Record<string, any>>(key: DataKey, context: UserContext) {
     if (!this.dataMap.has(key)) {
       this.dataMap.set(key, {} as T)
     }
     return this.dataMap.get(key) as T
   }
 
-  async set(
-    key: DataKey,
-    data: Record<string, any>,
-    context?: Record<string, any>,
-  ) {}
+  async set(key: DataKey, data: Record<string, any>, context: UserContext) {}
 
-  async clear(key: `${string}:${string}:${string}`) {
+  async clear(key: DataKey, context: UserContext) {
     return this.dataMap.delete(key)
   }
+
+  async clearAll(context: UserContext) {}
 }

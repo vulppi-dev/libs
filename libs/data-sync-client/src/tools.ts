@@ -14,11 +14,6 @@ export function genGUID(size: number = 20) {
   return id
 }
 
-export function clearOptions(opt: any) {
-  delete opt.port
-  delete opt.noServer
-}
-
 export function safeGetMap<K extends any, V extends any, M extends Map<K, V>>(
   key: K,
   map: M,
@@ -30,28 +25,6 @@ export function safeGetMap<K extends any, V extends any, M extends Map<K, V>>(
   return map.get(key) as V
 }
 
-export interface ValidationData {
-  /**
-   * Cause use in header request Authorization type Bearer,
-   * the token is loaded.
-   */
-  token?: string
-  /**
-   * Cause use in header request Authorization type Basic,
-   * the user and pass is loaded.
-   */
-  user?: string
-  /**
-   * Cause use in header request Authorization type Basic,
-   * the user and pass is loaded.
-   */
-  pass?: string
-  /**
-   * The query params is loaded.
-   */
-  params: URLSearchParams
-}
-
 export type DataKey = `${string}:${string}:${string}`
 
 export interface CommandData {
@@ -59,13 +32,4 @@ export interface CommandData {
   agent: 'server' | 'client' | 'anonymous'
   key: DataKey
   data?: Record<string, any>
-}
-
-export type ValidationFunction = (
-  data: ValidationData,
-) => Promise<UserContext | undefined> | UserContext | undefined
-
-export type UserContext = {
-  id: string
-  [key: string]: any
 }

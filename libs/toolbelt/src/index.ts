@@ -1,4 +1,5 @@
 export * from './functions'
 export * as math from './math'
 export * as regexp from './regexp'
+export * from './serialize'
 export * from './types'
