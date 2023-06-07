@@ -1,9 +1,9 @@
 export type {
   CommandData,
   DataKey,
+  UserContext,
   ValidationData,
   ValidationFunction,
-  UserContext,
 } from './tools'
 
 import {
@@ -11,24 +11,35 @@ import {
   serializeObject,
   type Nullable,
 } from '@vulppi/toolbelt'
-import { IncomingMessage, Server } from 'http'
+
+import { Server as HTTPServer, IncomingMessage } from 'http'
+import { Server as HTTPSServer } from 'https'
 import { MemoryProvider, type SyncProvider } from 'provider'
 import type { Duplex } from 'stream'
 import { URLSearchParams } from 'url'
 import type { ServerOptions, WebSocket } from 'ws'
 import { WebSocketServer } from 'ws'
+import type {
+  CommandData,
+  DataKey,
+  UserContext,
+  ValidationData,
+  ValidationFunction,
+} from './tools'
 import {
   HEADER_KEY,
   HEADER_VALUE,
   clearOptions,
   genGUID,
   safeGetMap,
-  type CommandData,
-  type DataKey,
-  type UserContext,
-  type ValidationData,
-  type ValidationFunction,
 } from './tools'
+
+export type SyncServerOptions = Omit<
+  ServerOptions,
+  'port' | 'noServer' | 'server'
+> & {
+  server?: HTTPServer | HTTPSServer | boolean
+}
 
 /**
  * The SyncServer class is a server for data synchronization.
@@ -66,22 +77,28 @@ import {
  * @license MIT
  */
 export class SyncServer {
-  private _srv: Server
+  private readonly _opt: ServerOptions
+  private _srv: HTTPServer | HTTPServer | undefined
   private _io: WebSocketServer
   private _validation: ValidationFunction | undefined
   private _heartbeatInterval: number = 10000
   private _clientMap: Map<DataKey, Set<WebSocket>> = new Map()
   private _provider: SyncProvider = new MemoryProvider()
+  private _heartbeatRunning: NodeJS.Timeout | null = null
 
-  constructor(
-    opt: Omit<ServerOptions, 'port' | 'noServer'> | undefined,
-    cb?: () => void,
-  ) {
+  constructor(opt: SyncServerOptions | undefined, cb?: () => void) {
     if (opt) {
       clearOptions(opt)
     }
-    this._srv = opt?.server || new Server()
-    this._io = new WebSocketServer({ ...opt, server: this._srv }, cb)
+    if (opt?.server != null && typeof opt?.server !== 'boolean') {
+      this._srv = opt.server
+    }
+    if (opt?.server || opt?.server == null) {
+      this._srv = new HTTPServer()
+    }
+
+    this._opt = { ...opt, server: this._srv, noServer: opt?.server === false }
+    this._io = new WebSocketServer(this._opt, cb)
     this._prepare()
     this._startHeartbeat()
   }
@@ -130,7 +147,9 @@ export class SyncServer {
    * @param cb
    */
   public listen(port: number, cb?: () => void) {
-    this._srv.listen(port, cb)
+    cb && this._io.on('listening', cb)
+    this.attach(new HTTPServer())
+    this._srv!.listen(port)
   }
 
   /**
@@ -139,7 +158,23 @@ export class SyncServer {
    * @param cb
    */
   public onClose(cb: () => void) {
-    this._srv.on('close', cb)
+    this._io.on('close', cb)
+  }
+
+  /**
+   * Attach a server to the SyncServer.
+   */
+  public attach(server: HTTPServer | HTTPSServer) {
+    if (this._heartbeatRunning) {
+      clearTimeout(this._heartbeatRunning)
+      this._heartbeatRunning = null
+    }
+
+    this._srv = server
+    this._opt.server = server
+    this._io = new WebSocketServer(this._opt)
+    this._prepare()
+    this._startHeartbeat()
   }
 
   /**
@@ -148,9 +183,27 @@ export class SyncServer {
    * @param cb
    */
   public onError(cb: (err: Error) => void) {
-    this._srv.on('error', cb)
+    this._io.on('error', cb)
   }
 
+  /**
+   * This handleUpgrade method is a convenient wrapper around the handleUpgrade
+   * function provided by the underlying WebSocket library. It allows for
+   * handling upgrade requests from the client and establishing WebSocket connections.
+   *
+   * The method takes in several parameters:
+   *
+   * 1. __request__: `IncomingMessage` - This represents the incoming
+   *   HTTP request from the client.
+   * 1. __socket__: `Duplex` - This is the underlying network socket associated
+   *   with the request.
+   * 1. __upgradeHead__: `Buffer` - This parameter contains the optional upgrade
+   *   head information, which can be used for protocol-specific upgrades.
+   * 1. __callback__: `(client: WebSocket, request: IncomingMessage) => void` -
+   *   This is the callback function that will be invoked once the upgrade is
+   *   complete. It takes a client object representing the WebSocket
+   *   connection and the original request object.
+   */
   public handleUpgrade(
     request: IncomingMessage,
     socket: Duplex,
@@ -191,7 +244,12 @@ export class SyncServer {
           validationData.token = authorization.replace(/^bearer +/i, '')
         }
 
-        context = await this._validation(validationData)
+        try {
+          context = await this._validation(validationData)
+        } catch (err) {
+          context = null
+          this._io.emit('error', err)
+        }
       }
 
       if (!context) {
@@ -204,9 +262,6 @@ export class SyncServer {
       }
 
       this._loadClient(socket, context)
-    })
-    this._io.on('error', (err) => {
-      console.error('Error:', err)
     })
   }
 
@@ -295,7 +350,11 @@ export class SyncServer {
   }
 
   private _startHeartbeat() {
-    setTimeout(() => {
+    this._heartbeatRunning = setTimeout(() => {
+      if (this._heartbeatRunning) {
+        this._heartbeatRunning = null
+      }
+
       this._io.clients.forEach((client) => {
         if (client.readyState !== client.OPEN) {
           client.terminate()
