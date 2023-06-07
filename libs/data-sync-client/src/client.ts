@@ -1,13 +1,13 @@
-export { subscribe, snapshot } from 'valtio/vanilla'
+export { snapshot, subscribe } from 'valtio/vanilla'
 
+import { deserializeObject, serializeObject } from '@vulppi/toolbelt'
+import equal from 'deep-equal'
 import type { ClientRequestArgs } from 'http'
 import type { ClientOptions } from 'isomorphic-ws'
 import { WebSocket } from 'isomorphic-ws'
-import { proxy, subscribe } from 'valtio/vanilla'
 import { proxyWithHistory } from 'valtio/utils'
-import equal from 'deep-equal'
-import { deserializeObject, serializeObject } from '@vulppi/toolbelt'
-import { safeGetMap } from 'tools'
+import { proxy, subscribe } from 'valtio/vanilla'
+import { safeGetMap } from './tools'
 
 export interface CommandData {
   command: string

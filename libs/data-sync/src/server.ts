@@ -12,14 +12,14 @@ import {
   type Nullable,
 } from '@vulppi/toolbelt'
 
+import Cookies from 'cookie'
 import { Server as HTTPServer, IncomingMessage } from 'http'
 import { Server as HTTPSServer } from 'https'
-import { MemoryProvider, type SyncProvider } from 'provider'
 import type { Duplex } from 'stream'
 import { URLSearchParams } from 'url'
 import type { ServerOptions, WebSocket } from 'ws'
 import { WebSocketServer } from 'ws'
-import Cookies from 'cookie'
+import { MemoryProvider, type SyncProvider } from './provider'
 import type {
   CommandData,
   DataKey,
