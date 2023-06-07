@@ -50,6 +50,10 @@ export interface ValidationData {
    * The query params is loaded.
    */
   params: URLSearchParams
+  /**
+   * The cookies is loaded.
+   */
+  cookies: Record<string, string>
 }
 
 export type DataKey = `${string}:${string}:${string}`

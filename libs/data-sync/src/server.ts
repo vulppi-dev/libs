@@ -19,6 +19,7 @@ import type { Duplex } from 'stream'
 import { URLSearchParams } from 'url'
 import type { ServerOptions, WebSocket } from 'ws'
 import { WebSocketServer } from 'ws'
+import Cookies from 'cookie'
 import type {
   CommandData,
   DataKey,
@@ -227,10 +228,13 @@ export class SyncServer {
       let context: Nullable<UserContext> = { id: '' }
       // Verify if the client is valid
       if (this._validation) {
+        const headers = req.headers
+        const cookies = Cookies.parse(headers.cookie || '')
         const validationData: ValidationData = {
           params: new URLSearchParams(req.url?.split('?')[1]),
+          cookies,
         }
-        const authorization = req.headers.authorization || ''
+        const authorization = headers.authorization || ''
         if (/^basic .+/i.test(authorization)) {
           const [user, pass] = Buffer.from(
             authorization.replace(/^basic +/i, ''),
