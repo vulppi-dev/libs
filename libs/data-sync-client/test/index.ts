@@ -1,7 +1,7 @@
 import { SyncClient, subscribe } from '../src'
 import { createInterface } from 'readline'
 
-const client = new SyncClient('ws://localhost:3000/sync')
+const client = new SyncClient('ws://localhost:3001/sync', ['mine'])
 const [data] = client.getBindData('test:test')
 
 subscribe(data, () => {

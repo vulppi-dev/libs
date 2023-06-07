@@ -4,7 +4,7 @@ import { deserializeObject, serializeObject } from '@vulppi/toolbelt'
 import equal from 'deep-equal'
 import type { ClientRequestArgs } from 'http'
 import type { ClientOptions } from 'isomorphic-ws'
-import { WebSocket } from 'isomorphic-ws'
+import WebSocket from 'isomorphic-ws'
 import { proxyWithHistory } from 'valtio/utils'
 import { proxy, subscribe } from 'valtio/vanilla'
 import { safeGetMap } from './tools'
@@ -17,7 +17,7 @@ export interface CommandData {
 }
 
 function parseKey(key: string, namespace: string = 'default') {
-  if (!/^[a-z0-9_\-\$]+:[a-z0-9_\-\$]+$/i.test(key))
+  if (!/^[a-z0-9_\-\$]+:[^: ]+$/i.test(key))
     throw new Error(
       'Invalid key format. Key must be in format of <collection>:<id> (e.g. user:1)',
     )
@@ -60,7 +60,8 @@ function parseKey(key: string, namespace: string = 'default') {
  * @license MIT
  */
 export class SyncClient {
-  private _ioConfig: ClientOptions | ClientRequestArgs
+  private _ioURI: string | URL
+  private _ioProtocols: string | string[]
   private _io: WebSocket
   private _dataMap = new Map<string, Record<string, any>>()
   private _preDataMap = new Map<string, Record<string, any>>()
@@ -69,26 +70,43 @@ export class SyncClient {
 
   private _preSendPool = new Set<CommandData>()
 
-  constructor(uri: string | URL, opt?: ClientOptions | ClientRequestArgs) {
-    this._ioConfig = {
-      ...opt,
-      headers: {
-        ...opt?.headers,
-        'X-VULPPI-CLIENT': 'vulppi-datasync-client',
-      },
-    }
-    this._io = new WebSocket(uri, this._ioConfig)
+  constructor(uri: string | URL, protocols?: string | string[]) {
+    this._ioURI = uri
+    this._ioProtocols = [
+      'vulppi-datasync-client',
+      ...((Array.isArray(protocols) ? protocols : protocols) || []),
+    ]
+    this._io = new WebSocket(this._ioURI, this._ioProtocols)
     this._prepare()
   }
 
+  public leaveData(
+    key: `${string}:${string}`,
+    options?: {
+      namespace?: string
+      /**
+       * @type {number} In seconds (min: 1 second)
+       */
+      autoUnbindTimeout?: number
+    },
+  ) {
+    const safeKey = parseKey(key, options?.namespace)
+    this._unbindData(safeKey)
+  }
   /**
    * Get data binded to the Key from the server.
    */
   public getBindData<T extends Record<string, any>>(
     key: `${string}:${string}`,
-    namespace?: string,
+    options?: {
+      namespace?: string
+      /**
+       * @type {number} In seconds (min: 1 second)
+       */
+      autoUnbindTimeout?: number
+    },
   ) {
-    const safeKey = parseKey(key, namespace)
+    const safeKey = parseKey(key, options?.namespace)
     this._send({
       key: safeKey,
       agent: 'client',
@@ -109,6 +127,8 @@ export class SyncClient {
       this._unbindData(safeKey)
     }
 
+    options?.autoUnbindTimeout &&
+      this.autoClearIfUnused(options.autoUnbindTimeout, key, options.namespace)
     return Object.assign([proxyData, unbindData], {
       data: proxyData,
       unbind: unbindData,
@@ -120,7 +140,7 @@ export class SyncClient {
    * This function will return a proxy with history.
    */
   public getHistory(key: `${string}:${string}`, namespace: string = 'default') {
-    return proxyWithHistory(this.getBindData(key, namespace))
+    return proxyWithHistory(this.getBindData(key, { namespace })[0])
   }
 
   /**
@@ -150,14 +170,12 @@ export class SyncClient {
 
   private _prepare() {
     this._io.on('open', () => {
-      console.debug('Connection opened!')
       this._preSendPool.forEach((data) => {
         this._send(data)
       })
       this._preSendPool.clear()
 
       const keys = Array.from(this._dataMap.keys())
-      console.debug('Requesting data from server...', keys)
       keys.forEach((key) => {
         this._send({
           key,
@@ -197,7 +215,6 @@ export class SyncClient {
     })
     this._io.on('close', (code) => {
       if (code === 1000) return
-      this._reconnect()
     })
     this._io.on('error', (err) => {
       if (err.message.includes('ECONNREFUSED')) {
@@ -208,12 +225,9 @@ export class SyncClient {
     })
   }
 
-  private _reconnect() {
-    setTimeout(() => {
-      console.debug('Reconnecting...')
-      this._io = new WebSocket(this._io.url, this._ioConfig)
-      this._prepare()
-    }, 2000)
+  reconnect() {
+    this._io = new WebSocket(this._ioURI, this._ioProtocols)
+    this._prepare()
   }
 
   private _checkAndSend<T extends Record<string, any>>(data: T, key: string) {
@@ -241,6 +255,8 @@ export class SyncClient {
   private _send(data: CommandData) {
     if (this._io.readyState === WebSocket.OPEN) {
       this._io.send(serializeObject(data))
+    } else if (this._io.readyState === WebSocket.CLOSED) {
+      this.reconnect()
     } else {
       this._preSendPool.add(data)
     }

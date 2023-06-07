@@ -32,21 +32,6 @@ export function safeGetMap<K extends any, V extends any, M extends Map<K, V>>(
 
 export interface ValidationData {
   /**
-   * Cause use in header request Authorization type Bearer,
-   * the token is loaded.
-   */
-  token?: string
-  /**
-   * Cause use in header request Authorization type Basic,
-   * the user and pass is loaded.
-   */
-  user?: string
-  /**
-   * Cause use in header request Authorization type Basic,
-   * the user and pass is loaded.
-   */
-  pass?: string
-  /**
    * The query params is loaded.
    */
   params: URLSearchParams
@@ -54,6 +39,10 @@ export interface ValidationData {
    * The cookies is loaded.
    */
   cookies: Record<string, string>
+  /**
+   * The cookies is loaded.
+   */
+  protocols: string[]
 }
 
 export type DataKey = `${string}:${string}:${string}`

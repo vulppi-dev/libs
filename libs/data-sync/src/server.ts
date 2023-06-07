@@ -217,10 +217,10 @@ export class SyncServer {
   private _prepare() {
     this._io.on('connection', async (socket, req) => {
       // Verify if the client is a vulppi-datasync-client
-      if (
-        !(HEADER_KEY in req.headers) ||
-        req.headers[HEADER_KEY] !== HEADER_VALUE
-      ) {
+      const headers = req.headers
+      const protocols = headers['sec-websocket-protocol']?.split(/ *, */g) || []
+      console.log(protocols)
+      if (!protocols.includes(HEADER_VALUE)) {
         socket.terminate()
         return
       }
@@ -228,26 +228,12 @@ export class SyncServer {
       let context: Nullable<UserContext> = { id: '' }
       // Verify if the client is valid
       if (this._validation) {
-        const headers = req.headers
         const cookies = Cookies.parse(headers.cookie || '')
         const validationData: ValidationData = {
           params: new URLSearchParams(req.url?.split('?')[1]),
           cookies,
+          protocols: protocols.filter((p) => p !== HEADER_VALUE),
         }
-        const authorization = headers.authorization || ''
-        if (/^basic .+/i.test(authorization)) {
-          const [user, pass] = Buffer.from(
-            authorization.replace(/^basic +/i, ''),
-            'base64',
-          )
-            .toString()
-            .split(':')
-          validationData.user = user
-          validationData.pass = pass
-        } else if (/^bearer .+/i.test(authorization)) {
-          validationData.token = authorization.replace(/^bearer +/i, '')
-        }
-
         try {
           context = await this._validation(validationData)
         } catch (err) {

@@ -13,6 +13,7 @@
     "strict": true,
     "verbatimModuleSyntax": true,
     "moduleResolution": "node",
+    "lib": ["ESNext", "DOM"],
     "target": "ESNext",
     "baseUrl": "src",
     "outDir": "dist"

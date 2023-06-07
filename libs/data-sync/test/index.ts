@@ -4,6 +4,6 @@ const server = new SyncServer({
   path: '/sync',
 })
 
-server.listen(3000, () => {
-  console.log('Server started! in port %d', 3000)
+server.listen(3001, () => {
+  console.log('Server started! in port %d', 3001)
 })
