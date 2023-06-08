@@ -169,7 +169,7 @@ export class SyncClient {
   }
 
   private _prepare() {
-    this._io.on('open', () => {
+    this._io.addEventListener('open', () => {
       this._preSendPool.forEach((data) => {
         this._send(data)
       })
@@ -184,7 +184,7 @@ export class SyncClient {
         })
       })
     })
-    this._io.on('message', (bff) => {
+    this._io.addEventListener('message', (bff) => {
       if (!(bff instanceof Buffer)) return
       const { data, command, key } = deserializeObject(bff) as CommandData
       if (!this._metaMap.has(key)) {
@@ -213,15 +213,15 @@ export class SyncClient {
 
       this._preDataMap.set(key, JSON.parse(JSON.stringify(newData)))
     })
-    this._io.on('close', (code) => {
-      if (code === 1000) return
+    this._io.addEventListener('close', (ev) => {
+      if (ev.code === 1000) return
     })
-    this._io.on('error', (err) => {
+    this._io.addEventListener('error', (err) => {
       if (err.message.includes('ECONNREFUSED')) {
         console.error('Connection refused!')
         return
       }
-      console.error(err.cause || err.message || err)
+      console.error(err.message || err)
     })
   }
 
