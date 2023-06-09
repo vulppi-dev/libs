@@ -2,9 +2,8 @@ export { snapshot, subscribe } from 'valtio/vanilla'
 
 import { deserializeObject, serializeObject } from '@vulppi/toolbelt'
 import equal from 'deep-equal'
-import type { ClientRequestArgs } from 'http'
-import type { ClientOptions } from 'isomorphic-ws'
 import WebSocket from 'isomorphic-ws'
+import { TimeoutHandler } from 'timeout'
 import { proxyWithHistory } from 'valtio/utils'
 import { proxy, subscribe } from 'valtio/vanilla'
 import { safeGetMap } from './tools'
@@ -160,12 +159,15 @@ export class SyncClient {
       this._metaMap,
       () => ({} as Record<string, any>),
     )
-    if (meta.autoClearId) {
-      clearTimeout(meta.autoClearId)
+    if (meta.autoClear) {
+      const timer = meta.autoClear as TimeoutHandler
+      timer.restart(Math.max(duration * 1000, 1000))
+      return
     }
-    meta.autoClearId = setTimeout(() => {
+    meta.autoClear = new TimeoutHandler(Math.max(duration * 1000, 1000), () => {
       this._unbindData(safeKey)
-    }, Math.max(duration * 1000, 1000))
+    })
+    meta.autoClear.start()
   }
 
   private _prepare() {
@@ -184,15 +186,23 @@ export class SyncClient {
         })
       })
     })
-    this._io.addEventListener('message', (bff) => {
-      if (!(bff instanceof Buffer)) return
-      const { data, command, key } = deserializeObject(bff) as CommandData
-      if (!this._metaMap.has(key)) {
-        this._metaMap.set(key, {})
+    this._io.addEventListener('message', async (ev) => {
+      let bff: Buffer | null = null
+      if (ev.data instanceof Buffer) {
+        bff = ev.data
+      } else if (ev.data instanceof Blob) {
+        bff = Buffer.from(await ev.data.arrayBuffer())
       }
+      if (!bff) return
+
+      const { data, command, key } = deserializeObject(bff) as CommandData
       let newData: Record<string, any> = {}
       const dataMap = this._dataMap.get(key) || {}
-      const meta = this._metaMap.get(key)!
+      const meta = safeGetMap(
+        key,
+        this._metaMap,
+        () => ({} as Record<string, any>),
+      )
       meta.server = !equal(dataMap, data)
       // TODO: create versioning system
 
@@ -211,6 +221,7 @@ export class SyncClient {
         delete dataMap[k]
       })
 
+      meta.autoClear?.restart()
       this._preDataMap.set(key, JSON.parse(JSON.stringify(newData)))
     })
     this._io.addEventListener('close', (ev) => {
