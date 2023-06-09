@@ -3,9 +3,9 @@ export { snapshot, subscribe } from 'valtio/vanilla'
 import { deserializeObject, serializeObject } from '@vulppi/toolbelt'
 import equal from 'deep-equal'
 import WebSocket from 'isomorphic-ws'
-import { TimeoutHandler } from 'timeout'
 import { proxyWithHistory } from 'valtio/utils'
 import { proxy, subscribe } from 'valtio/vanilla'
+import { TimeoutHandler } from './timeout'
 import { safeGetMap } from './tools'
 
 export interface CommandData {
