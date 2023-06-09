@@ -123,10 +123,7 @@ export abstract class SyncProvider {
     }
   }
 
-  abstract get<T extends Record<string, any>>(
-    key: DataKey,
-    context: UserContext,
-  ): Promise<T> | T
+  abstract get(key: DataKey, context: UserContext): Promise<any> | any
 
   abstract set(
     key: DataKey,
@@ -145,11 +142,11 @@ export abstract class SyncProvider {
  * Simple provider for store data in memory
  */
 export class MemoryProvider extends SyncProvider {
-  async get<T extends Record<string, any>>(key: DataKey, context: UserContext) {
+  async get(key: DataKey, context: UserContext) {
     if (!this.dataMap.has(key)) {
-      this.dataMap.set(key, {} as T)
+      this.dataMap.set(key, {})
     }
-    return this.dataMap.get(key) as T
+    return this.dataMap.get(key)
   }
 
   async set(key: DataKey, data: Record<string, any>, context: UserContext) {}

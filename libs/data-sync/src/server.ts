@@ -219,7 +219,6 @@ export class SyncServer {
       // Verify if the client is a vulppi-datasync-client
       const headers = req.headers
       const protocols = headers['sec-websocket-protocol']?.split(/ *, */g) || []
-      console.log(protocols)
       if (!protocols.includes(HEADER_VALUE)) {
         socket.terminate()
         return
