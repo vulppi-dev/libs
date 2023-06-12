@@ -60,5 +60,10 @@ export type ValidationFunction = (
 
 export type UserContext = {
   id: string
+  name: string
   [key: string]: any
 }
+
+export type Operations =
+  | [op: 'set', path: string[], before: any, after: any]
+  | [op: 'delete', path: string[], after: any]

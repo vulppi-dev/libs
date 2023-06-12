@@ -1,22 +1,15 @@
 import { promiseDelay } from '@vulppi/toolbelt'
-import type { Operation as Op } from 'just-diff'
-import { diff } from 'just-diff'
-import _ from 'lodash'
-import type { DataKey, UserContext } from './tools'
+import { set, unset } from 'lodash'
+import type { DataKey, Operations, UserContext } from './tools'
 
 const voidFunction = () => {}
 
-type Operation = {
-  op: Op
-  path: Array<string | number>
-  value: any
-}
+export type AdditionalOperationsCallback = (ops: Operations[]) => void
 
-function buildOperations(
-  before: Record<string, any>,
-  after: Record<string, any>,
-) {
-  return diff(before, after)
+export type SetContext = {
+  context: UserContext
+  operations: Operations[]
+  additionalOps: AdditionalOperationsCallback
 }
 
 export abstract class SyncProvider {
@@ -25,19 +18,21 @@ export abstract class SyncProvider {
   private _lockMap = new Map<string, boolean>()
   private _waitMap = new Map<string, (() => Promise<void>)[]>()
 
-  //
   get dataMap() {
     return this._dataMap
   }
 
-  public async concurrencySet<T extends Record<string, any>>(
+  public async concurrencySet(
     key: DataKey,
-    value: T,
+    ops: Operations[],
     context: UserContext,
+    additionalOps: AdditionalOperationsCallback,
   ) {
+    if (!ops.length) return voidFunction
+
     // Not exists key, apply operations and return
     if (!this._dataMap.has(key)) {
-      await this._applyOperations(key, buildOperations({}, value), context)
+      await this._applyOperations(key, ops, context, additionalOps)
       return voidFunction
     }
 
@@ -52,7 +47,7 @@ export abstract class SyncProvider {
       !locked && this._lockedMap.set(key, await this.get(key, context))
       const prev = this._lockedMap.get(key) || (await this.get(key, context))
       this._lockMap.set(key, true)
-      await this._applyOperations(key, buildOperations(prev, value), context)
+      await this._applyOperations(key, ops, context, additionalOps)
       return async () => {
         const cb = listPromise.shift()
         await cb?.()
@@ -99,28 +94,29 @@ export abstract class SyncProvider {
 
   private async _applyOperations(
     key: DataKey,
-    operations: Operation[],
+    operations: Operations[],
     context: UserContext,
+    additionalOps: AdditionalOperationsCallback,
   ) {
     const value = structuredClone(this.dataMap.get(key) || {})
 
-    operations.forEach((op) => {
-      switch (op.op) {
-        case 'add':
-        case 'replace':
-          _.set(value, op.path, op.value)
+    operations.forEach(([op, path, after, before]) => {
+      const safePath = path.map((p) => {
+        if (/^\d+$/.test(p)) return parseInt(p)
+        return p
+      })
+      switch (op) {
+        case 'set':
+          set(value, safePath, after)
           break
-        case 'remove':
-          _.unset(value, op.path)
+        case 'delete':
+          unset(value, safePath)
           break
       }
     })
 
     this.dataMap.set(key, value)
-
-    if (operations.length) {
-      this.set(key, value, context)
-    }
+    this.set(key, value, { context, additionalOps, operations })
   }
 
   abstract get(key: DataKey, context: UserContext): Promise<any> | any
@@ -128,7 +124,7 @@ export abstract class SyncProvider {
   abstract set(
     key: DataKey,
     value: Record<string, any>,
-    context: UserContext,
+    context: SetContext,
   ): Promise<void> | void
 
   abstract clear(key: DataKey, context: UserContext): Promise<boolean> | boolean
@@ -149,7 +145,7 @@ export class MemoryProvider extends SyncProvider {
     return this.dataMap.get(key)
   }
 
-  async set(key: DataKey, data: Record<string, any>, context: UserContext) {}
+  async set(key: DataKey, data: Record<string, any>, context: SetContext) {}
 
   async clear(key: DataKey, context: UserContext) {
     return this.dataMap.delete(key)

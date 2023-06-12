@@ -224,7 +224,7 @@ export class SyncServer {
         return
       }
 
-      let context: Nullable<UserContext> = { id: '' }
+      let context: Nullable<UserContext> = { id: '', name: 'Anonymous' }
       // Verify if the client is valid
       if (this._validation) {
         const cookies = Cookies.parse(headers.cookie || '')
@@ -276,7 +276,7 @@ export class SyncServer {
 
           socket.send(
             serializeObject({
-              command: 'set',
+              command: 'get',
               agent: 'server',
               key,
               data: await this._provider.get(key, context),
@@ -288,13 +288,14 @@ export class SyncServer {
           clients = safeGetMap(key, this._clientMap, () => new Set())
           if (!clients.size) return
           try {
+            const ops = data?.ops || []
             const end = await this._provider.concurrencySet(
               key,
-              data || {},
+              ops,
               context,
+              (addOps) => ops.push(...addOps),
             )
 
-            const dataToSend = await this._provider.get(key, context)
             clients.forEach((client) => {
               if (client.readyState !== client.OPEN) return
 
@@ -303,7 +304,13 @@ export class SyncServer {
                   command: 'set',
                   agent: 'server',
                   key,
-                  data: dataToSend,
+                  data: {
+                    ops,
+                    user: {
+                      id: context.id,
+                      name: context.name,
+                    },
+                  },
                 }),
               )
             })

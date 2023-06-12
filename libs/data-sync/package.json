@@ -1,6 +1,6 @@
 {
   "name": "@vulppi/data-sync",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "license": "MIT",
   "private": false,
   "author": {
@@ -31,8 +31,8 @@
     "build": "run-s clear build-all",
     "build-all": "run-p build:*",
     "clear": "rimraf dist",
-    "build:esm": "esbuild --bundle --minify --target=node18 --platform=node --format=esm --packages=external --out-extension:.js=.mjs --outdir=dist src/index.ts",
-    "build:cjs": "esbuild --bundle --minify --target=node18 --platform=node --format=cjs --packages=external --out-extension:.js=.cjs --outdir=dist src/index.ts",
+    "build:esm": "esbuild --bundle --minify --target=node18 --tree-shaking=true --platform=node --format=esm --packages=external --out-extension:.js=.mjs --outdir=dist src/index.ts",
+    "build:cjs": "esbuild --bundle --minify --target=node18 --tree-shaking=true --platform=node --format=cjs --packages=external --out-extension:.js=.cjs --outdir=dist src/index.ts",
     "build:types": "tsc",
     "test": "node --loader esbuild-register/loader -r esbuild-register test/index.ts",
     "pub": "npm publish --access public",
@@ -41,8 +41,6 @@
   "dependencies": {
     "@vulppi/toolbelt": "^0.6.2",
     "cookie": "^0.5.0",
-    "esbuild": "^0.17.19",
-    "just-diff": "^6.0.2",
     "lodash": "^4.17.21",
     "ws": "^8.13.0"
   },
@@ -51,6 +49,7 @@
     "@types/lodash": "^4.14.195",
     "@types/node": "^20.2.5",
     "@types/ws": "^8.5.4",
+    "esbuild": "^0.17.19",
     "esbuild-register": "^3.4.2",
     "npm-run-all": "^4.1.5",
     "rimraf": "^5.0.1",
