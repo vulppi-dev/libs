@@ -1,4 +1,5 @@
 export { snapshot, subscribe } from 'valtio/vanilla'
+export type { DataKey, Operations } from './tools'
 
 import { deserializeObject, serializeObject } from '@vulppi/toolbelt'
 import { proxyWithHistory } from 'valtio/utils'
