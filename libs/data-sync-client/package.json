@@ -1,6 +1,7 @@
 {
   "name": "@vulppi/data-sync-client",
-  "version": "0.2.4",
+  "version": "0.3.2",
+  "type": "module",
   "license": "MIT",
   "private": false,
   "author": {
@@ -26,30 +27,36 @@
     "proxy",
     "store"
   ],
-  "type": "module",
-  "main": "dist/index.cjs",
-  "types": "dist/index.d.ts",
-  "module": "dist/index.mjs",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "require": "./dist/index.cjs",
+      "import": "./dist/index.mjs",
+      "types": "./dist/index.d.ts"
+    }
+  },
   "scripts": {
     "build": "run-s clear build-all",
     "build-all": "run-p build:*",
     "clear": "rimraf dist",
-    "build:esm": "esbuild --bundle --minify --target=node18 --platform=node --format=esm --packages=external --out-extension:.js=.mjs --outdir=dist src/index.ts",
-    "build:cjs": "esbuild --bundle --minify --target=node18 --platform=node --format=cjs --packages=external --out-extension:.js=.cjs --outdir=dist src/index.ts",
+    "build:esm": "esbuild --bundle --minify --tree-shaking=true --platform=browser --format=esm --outfile=dist/index.mjs src/index.ts",
+    "build:cjs": "esbuild --bundle --minify --tree-shaking=true --platform=browser --format=cjs --outfile=dist/index.cjs src/index.ts",
     "build:types": "tsc",
     "test": "node --loader esbuild-register/loader -r esbuild-register test/index.ts",
     "pub": "npm publish --access public",
     "pub:tag": "npm publish --access public --tag"
   },
   "dependencies": {
+    "@types/lodash": "^4.14.195",
     "@vulppi/toolbelt": "^0.6.2",
-    "deep-equal": "^2.2.1",
     "esbuild": "^0.17.19",
     "isomorphic-ws": "^5.0.0",
+    "lodash": "^4.17.21",
     "valtio": "^1.10.5"
   },
   "devDependencies": {
-    "@types/deep-equal": "^1.0.1",
     "@types/node": "^20.2.5",
     "esbuild-register": "^3.4.2",
     "npm-run-all": "^4.1.5",

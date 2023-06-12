@@ -1,12 +1,12 @@
 export { snapshot, subscribe } from 'valtio/vanilla'
 
 import { deserializeObject, serializeObject } from '@vulppi/toolbelt'
-import equal from 'deep-equal'
-import WebSocket from 'isomorphic-ws'
 import { proxyWithHistory } from 'valtio/utils'
 import { proxy, subscribe } from 'valtio/vanilla'
+import WSocket from 'isomorphic-ws'
 import { TimeoutHandler } from './timeout'
-import { safeGetMap } from './tools'
+import { safeGetMap, type Operations, deepEqual } from './tools'
+import { set, unset } from 'lodash'
 
 export interface CommandData {
   command: string
@@ -21,6 +21,45 @@ function parseKey(key: string, namespace: string = 'default') {
       'Invalid key format. Key must be in format of <collection>:<id> (e.g. user:1)',
     )
   return `${namespace}:${key}`
+}
+
+function invertOperations(ops: Operations[]): Operations[] {
+  return ops.map(([op, path, after, before]) => {
+    switch (op) {
+      case 'set':
+        if (before) return ['set', path, before, undefined] as Operations
+        else return ['delete', path, undefined] as Operations
+      case 'delete':
+        return ['set', path, after, undefined] as Operations
+    }
+  })
+}
+
+function applyOperations(proxy: Record<string, any>, ops: Operations[]) {
+  ops.forEach(([op, path, after, before]) => {
+    const safePath = path.map((p) => (/^\d+$/.test(p) ? parseInt(p) : p))
+    switch (op) {
+      case 'set':
+        set(proxy, safePath, after)
+        break
+      case 'delete':
+        unset(proxy, safePath)
+        break
+    }
+  })
+}
+
+function equalOperations(ops1: Operations[], ops2: Operations[]) {
+  if (ops1.length !== ops2.length) return false
+  for (let i = 0; i < ops1.length; i++) {
+    const op1 = ops1[i]
+    const op2 = ops2[i]
+    if (op1[0] !== op2[0]) return false
+    if (!deepEqual(op1[1], op2[1])) return false
+    if (!deepEqual(op1[2], op2[2])) return false
+    if (!deepEqual(op1[3], op2[3])) return false
+  }
+  return true
 }
 
 /**
@@ -63,7 +102,7 @@ export class SyncClient {
   private _ioProtocols: string | string[]
   private _io: WebSocket
   private _dataMap = new Map<string, Record<string, any>>()
-  private _preDataMap = new Map<string, Record<string, any>>()
+  private _preDataMap = new Map<string, Operations[]>()
   private _unsubMap = new Map<string, VoidFunction>()
   private _metaMap = new Map<string, Record<string, any>>()
 
@@ -75,7 +114,8 @@ export class SyncClient {
       'vulppi-datasync-client',
       ...((Array.isArray(protocols) ? protocols : protocols) || []),
     ]
-    this._io = new WebSocket(this._ioURI, this._ioProtocols)
+    // @ts-ignore
+    this._io = new WSocket(this._ioURI, this._ioProtocols)
     this._prepare()
   }
 
@@ -84,6 +124,8 @@ export class SyncClient {
     options?: {
       namespace?: string
       /**
+       * If the value is `0` or `undefined`, the data will not be unbinded.
+       *
        * @type {number} In seconds (min: 1 second)
        */
       autoUnbindTimeout?: number
@@ -95,14 +137,14 @@ export class SyncClient {
   /**
    * Get data binded to the Key from the server.
    */
-  public getBindData<T extends Record<string, any>>(
+  public getData<T extends Record<string, any>>(
     key: `${string}:${string}`,
     options?: {
       namespace?: string
       /**
        * @type {number} In seconds (min: 1 second)
        */
-      autoUnbindTimeout?: number
+      leaveTimeout?: number
     },
   ) {
     const safeKey = parseKey(key, options?.namespace)
@@ -113,10 +155,26 @@ export class SyncClient {
     })
 
     const proxyData = safeGetMap(safeKey, this._dataMap, () => {
-      this._preDataMap.set(safeKey, {})
       const data = proxy({})
-      const unsub = subscribe(data, () => {
-        this._checkAndSend(data, safeKey)
+      const unsub = subscribe(data, (ops) => {
+        this._preDataMap.set(safeKey, invertOperations(ops as Operations[]))
+        const meta = safeGetMap(safeKey, this._metaMap, () => ({} as any))
+
+        if (
+          meta.server &&
+          (meta.serverOps == null ||
+            equalOperations(meta.serverOps, ops as Operations[]))
+        ) {
+          meta.server = false
+          meta.serverOps = null
+          return
+        }
+        this._send({
+          data: { ops },
+          key: safeKey,
+          agent: 'client',
+          command: 'set',
+        })
       })
       this._unsubMap.set(safeKey, unsub)
       return data
@@ -126,8 +184,8 @@ export class SyncClient {
       this._unbindData(safeKey)
     }
 
-    options?.autoUnbindTimeout &&
-      this.autoClearIfUnused(options.autoUnbindTimeout, key, options.namespace)
+    options?.leaveTimeout &&
+      this.leaveDataTimeout(options.leaveTimeout, key, options.namespace)
     return Object.assign([proxyData, unbindData], {
       data: proxyData,
       unbind: unbindData,
@@ -138,8 +196,11 @@ export class SyncClient {
    * Get data binded to the Key from the server.
    * This function will return a proxy with history.
    */
-  public getHistory(key: `${string}:${string}`, namespace: string = 'default') {
-    return proxyWithHistory(this.getBindData(key, { namespace })[0])
+  public getDataWithHistory(
+    key: `${string}:${string}`,
+    namespace: string = 'default',
+  ) {
+    return proxyWithHistory(this.getData(key, { namespace })[0])
   }
 
   /**
@@ -148,7 +209,7 @@ export class SyncClient {
    * @param key document key
    * @param namespace
    */
-  public autoClearIfUnused(
+  public leaveDataTimeout(
     duration: number,
     key: `${string}:${string}`,
     namespace: string = 'default',
@@ -170,6 +231,20 @@ export class SyncClient {
     meta.autoClear.start()
   }
 
+  reconnect() {
+    // @ts-ignore
+    this._io = new WSocket(this._ioURI, this._ioProtocols)
+    this._prepare()
+  }
+
+  disconnect() {
+    this._io.close(1000, 'disconnect')
+  }
+
+  close() {
+    this.disconnect()
+  }
+
   private _prepare() {
     this._io.addEventListener('open', () => {
       this._preSendPool.forEach((data) => {
@@ -186,72 +261,53 @@ export class SyncClient {
         })
       })
     })
-    this._io.addEventListener('message', async (ev) => {
-      let bff: Buffer | null = null
-      if (ev.data instanceof Buffer) {
+    this._io.addEventListener('message', async (ev: MessageEvent) => {
+      let bff: ArrayBuffer | null = null
+      if (ev.data instanceof ArrayBuffer) {
         bff = ev.data
       } else if (ev.data instanceof Blob) {
-        bff = Buffer.from(await ev.data.arrayBuffer())
+        bff = await ev.data.arrayBuffer()
       }
       if (!bff) return
 
       const { data, command, key } = deserializeObject(bff) as CommandData
-      let newData: Record<string, any> = {}
       const dataMap = this._dataMap.get(key) || {}
       const meta = safeGetMap(
         key,
         this._metaMap,
         () => ({} as Record<string, any>),
       )
-      meta.server = !equal(dataMap, data)
+
       // TODO: create versioning system
+      meta.server = !deepEqual(dataMap, data)
 
-      if (command === 'set') {
-        newData = data || {}
+      if (command === 'get' && data) {
+        const newData = (data || {}) as Record<string, any>
+        const newKeys = Object.keys(newData)
+        const oldKeys = Object.keys(dataMap)
+        const removeKeys = oldKeys.filter((k) => !newKeys.includes(k))
+
+        Object.assign(dataMap, newData)
+        removeKeys.forEach((k) => {
+          delete dataMap[k]
+        })
+      } else if (command === 'set' && data) {
+        const user = data.user as Record<'name' | 'id', string>
+        const ops = data.ops as Operations[]
+        meta.serverOps = ops
+        applyOperations(dataMap, ops)
       } else if (command === 'error') {
-        newData = safeGetMap(key, this._preDataMap, () => ({}))
+        const ops = safeGetMap(key, this._preDataMap, () => [] as Operations[])
+        applyOperations(dataMap, ops)
       }
-
-      const dataMapKeys = Object.keys(dataMap)
-      const dataKeys = Object.keys(newData)
-
-      const keysToRemove = dataMapKeys.filter((k) => !dataKeys.includes(k))
-      Object.assign(dataMap, newData)
-      keysToRemove.forEach((k) => {
-        delete dataMap[k]
-      })
-
+      this._preDataMap.set(key, [])
       meta.autoClear?.restart()
-      this._preDataMap.set(key, JSON.parse(JSON.stringify(newData)))
     })
-    this._io.addEventListener('close', (ev) => {
+    this._io.addEventListener('close', (ev: CloseEvent) => {
       if (ev.code === 1000) return
     })
-    this._io.addEventListener('error', (err) => {
-      if (err.message.includes('ECONNREFUSED')) {
-        console.error('Connection refused!')
-        return
-      }
-      console.error(err.message || err)
-    })
-  }
-
-  reconnect() {
-    this._io = new WebSocket(this._ioURI, this._ioProtocols)
-    this._prepare()
-  }
-
-  private _checkAndSend<T extends Record<string, any>>(data: T, key: string) {
-    const meta = this._metaMap.get(key) || {}
-    if (meta.server) {
-      meta.server = false
-      return
-    }
-    this._send({
-      data,
-      key,
-      agent: 'client',
-      command: 'set',
+    this._io.addEventListener('error', (ev: Event) => {
+      console.error(ev)
     })
   }
 

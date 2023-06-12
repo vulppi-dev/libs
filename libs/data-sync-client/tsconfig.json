@@ -12,9 +12,10 @@
     "skipLibCheck": true,
     "strict": true,
     "verbatimModuleSyntax": true,
-    "moduleResolution": "node",
-    "lib": ["ESNext", "DOM"],
+    "lib": ["DOM"],
     "target": "ESNext",
+    "moduleResolution": "node",
+    "module": "ESNext",
     "baseUrl": "src",
     "outDir": "dist"
   }
