@@ -45,7 +45,6 @@ export abstract class SyncProvider {
 
     const callSet = async () => {
       !locked && this._lockedMap.set(key, await this.get(key, context))
-      const prev = this._lockedMap.get(key) || (await this.get(key, context))
       this._lockMap.set(key, true)
       await this._applyOperations(key, ops, context, additionalOps)
       return async () => {
@@ -100,23 +99,33 @@ export abstract class SyncProvider {
   ) {
     const value = structuredClone(this.dataMap.get(key) || {})
 
-    operations.forEach(([op, path, after, before]) => {
-      const safePath = path.map((p) => {
-        if (/^\d+$/.test(p)) return parseInt(p)
-        return p
+    const apply = (ops: Operations[]) => {
+      ops.forEach(([op, path, after, before]) => {
+        const safePath = path.map((p) => {
+          if (/^\d+$/.test(p)) return parseInt(p)
+          return p
+        })
+        switch (op) {
+          case 'set':
+            set(value, safePath, after)
+            break
+          case 'delete':
+            unset(value, safePath)
+            break
+        }
       })
-      switch (op) {
-        case 'set':
-          set(value, safePath, after)
-          break
-        case 'delete':
-          unset(value, safePath)
-          break
-      }
-    })
+    }
 
-    this.dataMap.set(key, value)
-    this.set(key, value, { context, additionalOps, operations })
+    apply(operations)
+    this.set(key, value, {
+      context,
+      additionalOps: (ops: Operations[]) => {
+        additionalOps(ops)
+        apply(ops)
+      },
+      operations,
+    })
+    this._dataMap.set(key, value)
   }
 
   abstract get(key: DataKey, context: UserContext): Promise<any> | any
