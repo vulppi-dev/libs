@@ -61,10 +61,11 @@ function clearExtension(path) {
 }
 
 async function callBuild() {
+  const index = await getEntries('.', 'index.ts')
   const commands = await getEntries('commands', 'index.ts')
   const lib = await getEntries('lib', '*.ts')
 
-  const entries = [...commands, ...lib].reduce(
+  const entries = [...index, ...commands, ...lib].reduce(
     (acc, p) => ({
       ...acc,
       [clearExtension(p)]: join('src', p),

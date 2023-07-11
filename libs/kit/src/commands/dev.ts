@@ -3,9 +3,10 @@ import dotenv from 'dotenv'
 import dotenvExpand from 'dotenv-expand'
 import { rmSync, watch } from 'fs'
 import _ from 'lodash'
-import { dirname, normalize, resolve } from 'path'
+import { dirname, resolve } from 'path'
 import { fileURLToPath, pathToFileURL } from 'url'
 import { Worker } from 'worker_threads'
+import { defaultPaths, globPatterns, regexpPatterns } from '../utils/constants'
 import {
   escapePath,
   globFind,
@@ -32,7 +33,7 @@ export async function handler(): Promise<void> {
   const projectPath = normalizePath(process.cwd())
   console.log('Starting the application in %s mode...', ck.bold('development'))
 
-  let configPath = await globFind(projectPath, 'vulppi.config.{mjs,cjs,js}')
+  let configPath = await globFind(projectPath, globPatterns.config)
   let envPath: string | undefined = await getEnvPath(projectPath)
 
   let configChecksum = configPath ? await getChecksum(configPath) : ''
@@ -49,11 +50,8 @@ export async function handler(): Promise<void> {
 
   watch(projectPath, async (_, filename) => {
     if (!filename) return
-    if (/^vulppi.config.[mc]?js$/.test(filename)) {
-      const configFiles = await globFindAll(
-        projectPath,
-        'vulppi.config.{mjs,cjs,js}',
-      )
+    if (regexpPatterns.config.test(filename)) {
+      const configFiles = await globFindAll(projectPath, globPatterns.config)
       if (configFiles.length > 1) {
         console.log(ck.red('Multiple config files found.'))
         console.log(
@@ -68,7 +66,7 @@ export async function handler(): Promise<void> {
         return
       }
       configPath = configFiles[0]
-    } else if (/^[a-z-_]*.env(\.[a-z-_]*)?$/) {
+    } else if (regexpPatterns.env.test(filename)) {
       const envFiles = await findEnvPaths(projectPath)
       if (envFiles.length > 1) {
         console.log(ck.red('Multiple env files found.'))
@@ -164,10 +162,7 @@ async function restartServer(
 }
 
 async function startRouterBuilder(basePath: string) {
-  const appFolder =
-    (await globFind(basePath, 'src/app')) ||
-    (await globFind(basePath, 'app')) ||
-    'src/app'
+  const appFolder = await getAppPath(basePath)
 
   console.log(
     'Application path: %s',
@@ -178,16 +173,16 @@ async function startRouterBuilder(basePath: string) {
 
   watch(appFolder, { recursive: true }, async (state, filename) => {
     if (!filename) return
-    const normalizedFilename = normalize(filename)
+    const normalizedFilename = normalizePath(filename)
 
-    if (/\/?(route|middleware|validation).ts/.test(normalizedFilename)) {
+    if (regexpPatterns.route.test(normalizedFilename)) {
       const oldChecksum = appFolderChecksum.get(normalizedFilename)
       const newChecksum = await getChecksum(join(appFolder, normalizedFilename))
       appFolderChecksum.set(normalizedFilename, newChecksum)
       if (oldChecksum !== newChecksum) {
         await callBuild({
           input: appFolder,
-          output: join(basePath, '.vulppi', 'app'),
+          output: join(basePath, defaultPaths.compiledApp),
           entry: normalizedFilename,
         })
       }
@@ -198,7 +193,7 @@ async function startRouterBuilder(basePath: string) {
     appFolder,
     '**/{route,middleware,validation}.ts',
   )
-  rmSync(join(basePath, '.vulppi', 'app'), { recursive: true })
+  rmSync(join(basePath, defaultPaths.compiledApp), { recursive: true })
   return Promise.all(
     appFiles.map(async (filename) => {
       const escapedPath = escapePath(filename, appFolder)
@@ -206,7 +201,7 @@ async function startRouterBuilder(basePath: string) {
       appFolderChecksum.set(escapedPath, checksum)
       await callBuild({
         input: appFolder,
-        output: join(basePath, '.vulppi', 'app'),
+        output: join(basePath, defaultPaths.compiledApp),
         entry: escapedPath,
       })
     }),
@@ -214,14 +209,16 @@ async function startRouterBuilder(basePath: string) {
 }
 
 async function findEnvPaths(basePath: string) {
-  return globFindAllList(
-    [basePath, '*.env'],
-    [basePath, '.env.*'],
-    [basePath, '*.env.*'],
-    [basePath, '.env'],
-  )
+  return globFindAllList(...globPatterns.env.map((p) => [basePath, p]))
 }
 
 async function getEnvPath(basePath: string) {
   return (await findEnvPaths(basePath))[0]
+}
+
+async function getAppPath(basePath: string) {
+  return (
+    (await globFindAllList(...globPatterns.app.map((p) => [basePath, p])))[0] ||
+    'app'
+  )
 }

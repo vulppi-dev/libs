@@ -35,6 +35,17 @@ export async function globFind(
   return res[0] && normalizePath(res[0])
 }
 
+export async function globFindList(
+  ...pattern: string[][]
+): Promise<string | undefined> {
+  const list = pattern.map((p) => join(...p))
+  const res = await glob(list, {
+    ignore: ['**/node_modules/**'],
+    windowsPathsNoEscape: true,
+  })
+  return res[0] && normalizePath(res[0])
+}
+
 export async function globFindAll(...pattern: string[]): Promise<string[]> {
   const res = await glob(join(...pattern), {
     ignore: ['**/node_modules/**'],

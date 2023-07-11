@@ -45,6 +45,20 @@ config.limits?.cors &&
 
 app.all('*', async (req, res) => {
   try {
+    const bodySize =
+      (req.headers['content-length'] &&
+        parseInt(req.headers['content-length'])) ||
+      0
+    const maxBodySize = parseStringBytesToNumber(
+      config.limits?.bodyMaxSize || '1mb',
+    )
+    if (maxBodySize && bodySize > maxBodySize) {
+      return res.status(StatusCodes.REQUEST_TOO_LONG).json({
+        message:
+          config.messages?.REQUEST_TOO_LONG || 'Request entity too large',
+      })
+    }
+
     const { data, headers, status } = await callWorker({
       route: req.path,
       basePath,
@@ -55,9 +69,7 @@ app.all('*', async (req, res) => {
         cookies: req.cookies,
         headers: req.headers,
         body: req.body,
-        buffer: req.read(
-          parseStringBytesToNumber(config.limits?.bodyMaxSize || '100kb'),
-        ),
+        buffer: req.read(),
       },
     })
     res

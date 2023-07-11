@@ -1,19 +1,16 @@
+import { StatusCodes } from 'http-status-codes'
+import { pathToFileURL } from 'url'
 import { workerData } from 'worker_threads'
+import { escapePath } from '../utils/path'
 import {
   findMiddlewarePathnames,
   findRoutePathname,
-  findValidatorPathname,
   sendResponse,
 } from './router-tools'
-import { StatusCodes } from 'http-status-codes'
-import { escapePath } from '../utils/path'
-import { pathToFileURL } from 'url'
+import _ from 'lodash'
 
 const { config, basePath, route, data } = workerData as CallWorkerProps
-const env = process.env as Record<string, string>
-
 const routePathnames = await findRoutePathname(basePath, route)
-
 if (!routePathnames.length) {
   sendResponse({
     status: StatusCodes.NOT_FOUND,
@@ -66,24 +63,88 @@ if (!countRouteMethods) {
   })
 }
 
-const { module: routeModule, path: routePathname } = routeModules.find(
-  (r) => !!(r.module[method] || r.module.default?.[method]),
-)!
-const validationPathname = await findValidatorPathname(routePathname)
+const { module: routeModule, path: routePathname } = routeFiltered[0]
+const requestHandler: Vulppi.RequestHandler | undefined =
+  routeModule[method] || routeModule.default?.[method]
+
+if (typeof requestHandler !== 'function') {
+  sendResponse({
+    status: StatusCodes.INTERNAL_SERVER_ERROR,
+    data: {
+      message:
+        config.messages?.INTERNAL_SERVER_ERROR || 'Internal server error',
+    },
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  })
+}
+
 const middlewarePathnames = await findMiddlewarePathnames(
   basePath,
   routePathname,
 )
 
-sendResponse({
-  status: StatusCodes.OK,
-  data: {
-    route,
-    routePathname,
-    validationPathname,
-    middlewarePathnames,
-  },
-  headers: {
-    'Content-Type': 'application/json',
-  },
-})
+const middlewareList = (
+  await Promise.all(
+    middlewarePathnames.map(async (r) => {
+      const m = await import(pathToFileURL(r).toString())
+      return m.default || m['middleware']
+    }),
+  )
+).filter((m) => !!m) as Vulppi.MiddlewareHandler[]
+
+try {
+  const middlewareResult = await middlewareList.reduce(
+    async (promise, middleware) => {
+      const data = await promise
+      return new Promise<Vulppi.RequestContext>(async (resolve, reject) => {
+        try {
+          let resolved = false
+          const res = await middleware(data, (c) => {
+            if (data.custom) {
+              _.merge(data.custom, c)
+            } else {
+              data.custom = c
+            }
+            resolved = true
+            resolve(data)
+          })
+
+          if (!resolved && res) {
+            reject(res)
+          }
+        } catch (error) {
+          reject(error)
+        }
+      })
+    },
+    Promise.resolve(data),
+  )
+
+  const response = await requestHandler(middlewareResult)
+
+  if (response) {
+    sendResponse(response)
+  }
+
+  sendResponse({
+    status: StatusCodes.OK,
+  })
+} catch (error) {
+  if (error instanceof Error) {
+    sendResponse({
+      status: StatusCodes.INTERNAL_SERVER_ERROR,
+      data: {
+        message: error.message,
+      },
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+  } else if (typeof error === 'object' && error != null) {
+    sendResponse(error)
+  }
+
+  throw error
+}
