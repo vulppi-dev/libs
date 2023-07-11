@@ -1,7 +1,7 @@
 import ck from 'chalk'
 import dotenv from 'dotenv'
 import dotenvExpand from 'dotenv-expand'
-import { watch } from 'fs'
+import { rmSync, rmdirSync, watch } from 'fs'
 import { glob } from 'glob'
 import _ from 'lodash'
 import { dirname, resolve } from 'path'
@@ -13,6 +13,7 @@ import {
   globFindAll,
   globFindAllList,
   join,
+  normalizePath,
 } from '../utils/path'
 import { callBuild } from './_builder'
 import { getChecksum } from './_common'
@@ -30,17 +31,8 @@ export const aliases = ['develop']
 export const describe = 'Start the development server'
 
 export async function handler(): Promise<void> {
-  const projectPath = process.cwd()
-  const appFolder =
-    (await globFind(projectPath, 'src/app')) ||
-    (await globFind(projectPath, 'app')) ||
-    'src/app'
-
+  const projectPath = normalizePath(process.cwd())
   console.log('Starting the application in %s mode...', ck.bold('development'))
-  console.log(
-    'Application path: %s',
-    ck.blue.bold(escapePath(appFolder, projectPath)),
-  )
 
   let configPath = await globFind(projectPath, 'vulppi.config.{mjs,cjs,js}')
   let envPath: string | undefined = await getEnvPath(projectPath)
@@ -117,43 +109,6 @@ export async function handler(): Promise<void> {
       restartServer(projectPath, configPath!, envPath)
     }
   })
-
-  const appFolderChecksum: Map<string, string> = new Map()
-  const appFiles = await globFindAll(
-    appFolder,
-    '**/{route,middleware,validation}.ts',
-  )
-
-  appFiles.forEach(async (filename) => {
-    const escapedPath = escapePath(filename, appFolder)
-    const checksum = await getChecksum(filename)
-    appFolderChecksum.set(escapedPath, checksum)
-    console.log('Compiling the %s file...', ck.bold.green(escapedPath))
-    callBuild({
-      input: appFolder,
-      output: join(projectPath, '.vulppi', 'app'),
-      entries: [escapedPath],
-    })
-  })
-
-  watch(appFolder, { recursive: true }, async (state, filename) => {
-    if (!filename) return
-    const normalizedFilename = normalize(filename)
-
-    if (/\/?(route|middleware|validation).ts/.test(normalizedFilename)) {
-      const oldChecksum = appFolderChecksum.get(filename)
-      const newChecksum = await getChecksum(join(appFolder, filename))
-      appFolderChecksum.set(filename, newChecksum)
-      if (oldChecksum !== newChecksum) {
-        console.log('Compiling the %s file...', ck.bold(filename))
-        callBuild({
-          input: appFolder,
-          output: join(projectPath, '.vulppi', 'app'),
-          entries: [filename],
-        })
-      }
-    }
-  })
 }
 
 let app: Worker | null = null
@@ -180,6 +135,7 @@ async function restartServer(
       console.log('Restarting the application...')
     } else {
       console.log('Starting the application...')
+      await startRouterBuilder(projectPath)
     }
 
     const configURL = pathToFileURL(configPath)
@@ -207,6 +163,56 @@ async function restartServer(
       env: envObject,
     })
   }, 1000)
+}
+
+async function startRouterBuilder(basePath: string) {
+  const appFolder =
+    (await globFind(basePath, 'src/app')) ||
+    (await globFind(basePath, 'app')) ||
+    'src/app'
+
+  console.log(
+    'Application path: %s',
+    ck.blue.bold(escapePath(appFolder, basePath)),
+  )
+
+  const appFolderChecksum: Map<string, string> = new Map()
+
+  watch(appFolder, { recursive: true }, async (state, filename) => {
+    if (!filename) return
+    const normalizedFilename = normalize(filename)
+
+    if (/\/?(route|middleware|validation).ts/.test(normalizedFilename)) {
+      const oldChecksum = appFolderChecksum.get(normalizedFilename)
+      const newChecksum = await getChecksum(join(appFolder, normalizedFilename))
+      appFolderChecksum.set(normalizedFilename, newChecksum)
+      if (oldChecksum !== newChecksum) {
+        await callBuild({
+          input: appFolder,
+          output: join(basePath, '.vulppi', 'app'),
+          entry: normalizedFilename,
+        })
+      }
+    }
+  })
+
+  const appFiles = await globFindAll(
+    appFolder,
+    '**/{route,middleware,validation}.ts',
+  )
+  rmdirSync(join(basePath, '.vulppi', 'app'), { recursive: true })
+  return Promise.all(
+    appFiles.map(async (filename) => {
+      const escapedPath = escapePath(filename, appFolder)
+      const checksum = await getChecksum(filename)
+      appFolderChecksum.set(escapedPath, checksum)
+      await callBuild({
+        input: appFolder,
+        output: join(basePath, '.vulppi', 'app'),
+        entry: escapedPath,
+      })
+    }),
+  )
 }
 
 async function findEnvPaths(basePath: string) {

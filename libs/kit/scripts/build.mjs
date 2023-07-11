@@ -57,7 +57,7 @@ async function callBuild() {
   await build({
     entryPoints: entries,
     bundle: true,
-    minify: true,
+    minify: false,
     sourcemap: true,
     packages: 'external',
     target: 'node18',

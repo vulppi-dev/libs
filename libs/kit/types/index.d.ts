@@ -62,6 +62,12 @@ declare namespace Vulppi {
        * @default 'Method not allowed'
        */
       METHOD_NOT_ALLOWED?: string
+      /**
+       * The message for the status code 400
+       *
+       * @default 'Multiple routes found'
+       */
+      MULTIPLE_ROUTES?: string
     }
     /**
      * The environment variables for the application
