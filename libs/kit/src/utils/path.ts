@@ -1,12 +1,24 @@
 import { glob } from 'glob'
-import path, { dirname, resolve } from 'path'
+import path, { dirname, isAbsolute, resolve } from 'path'
+import { lstatSync } from 'fs'
 import { fileURLToPath } from 'url'
 
+export function resolveModule(path: string, parent = import.meta.url) {
+  const safePath = /^[a-z]+:\/\//.test(path) ? fileURLToPath(path) : path
+  if (isAbsolute(safePath)) {
+    return resolve(safePath)
+  }
+  const p = dirname(fileURLToPath(parent))
+  return resolve(p, safePath)
+}
+
 export function getDirname() {
-  const urlPath = import.meta.url
-  // Url in dist/lib folder
-  const basePath = resolve(fileURLToPath(urlPath))
-  return dirname(basePath)
+  const res = resolveModule('.')
+  const stats = lstatSync(res)
+  if (stats.isDirectory()) {
+    return res
+  }
+  return dirname(res)
 }
 
 export function join(...paths: string[]) {

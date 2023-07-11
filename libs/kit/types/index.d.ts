@@ -1,5 +1,5 @@
 declare namespace Vulppi {
-  interface KitConfig {
+  export interface KitConfig {
     /**
      * The port where the application will be running
      * @default 4000
@@ -82,7 +82,9 @@ declare namespace Vulppi {
     env?: Record<string, string>
   }
 
-  interface ResponseMessage {
+  export interface RequestHandler {}
+
+  export interface ResponseMessage {
     data?: string | Record<string, any> | Blob | ArrayBuffer | Uint8Array
     status?: number
     headers?: Record<string, string>

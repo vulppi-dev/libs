@@ -1,5 +1,22 @@
 import { build } from 'esbuild'
 import { glob } from 'glob'
+import { dirname, isAbsolute, resolve } from 'path'
+import { fileURLToPath } from 'url'
+
+/**
+ *
+ * @param {string} path
+ * @param {string | undefined} parent
+ * @returns {Promise<string>}
+ */
+async function moduleResolver(path, parent = import.meta.url) {
+  const safePath = /^[a-z]+:\/\//.test(path) ? fileURLToPath(path) : path
+  if (isAbsolute(safePath)) {
+    return resolve(safePath)
+  }
+  const p = dirname(fileURLToPath(parent))
+  return resolve(p, safePath)
+}
 
 /**
  *
@@ -26,11 +43,11 @@ function join(...paths) {
  * @returns {string[]}
  */
 async function getEntries(path, ext) {
-  const basePath = join(process.cwd(), 'src')
+  const basePath = await moduleResolver('../src')
   const entry = join(basePath, path)
   const globPath = join(entry, ext)
   return await glob(globPath).then((paths) =>
-    paths.map((p) => normalizePath(p).replace(basePath, '')),
+    paths.map((p) => normalizePath(p.replace(basePath, ''))),
   )
 }
 

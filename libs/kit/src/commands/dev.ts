@@ -1,10 +1,9 @@
 import ck from 'chalk'
 import dotenv from 'dotenv'
 import dotenvExpand from 'dotenv-expand'
-import { rmSync, rmdirSync, watch } from 'fs'
-import { glob } from 'glob'
+import { rmSync, watch } from 'fs'
 import _ from 'lodash'
-import { dirname, resolve } from 'path'
+import { dirname, normalize, resolve } from 'path'
 import { fileURLToPath, pathToFileURL } from 'url'
 import { Worker } from 'worker_threads'
 import {
@@ -17,7 +16,6 @@ import {
 } from '../utils/path'
 import { callBuild } from './_builder'
 import { getChecksum } from './_common'
-import { normalize } from 'path'
 
 const urlPath = import.meta.url
 // Url in dist/commands folder
@@ -38,7 +36,7 @@ export async function handler(): Promise<void> {
   let envPath: string | undefined = await getEnvPath(projectPath)
 
   let configChecksum = configPath ? await getChecksum(configPath) : ''
-  let envChecksum = envPath ? await getChecksum(join(projectPath, envPath)) : ''
+  let envChecksum = envPath ? await getChecksum(envPath) : ''
 
   if (!configPath) {
     console.log(ck.red('No config file found. Please create a config file.'))
@@ -90,7 +88,7 @@ export async function handler(): Promise<void> {
     let changeEnv = false
 
     if (configPath) {
-      const newConfigChecksum = await getChecksum(join(projectPath, configPath))
+      const newConfigChecksum = await getChecksum(configPath)
       if (configChecksum !== newConfigChecksum) {
         configChecksum = newConfigChecksum
         changeConfig = true
@@ -98,7 +96,7 @@ export async function handler(): Promise<void> {
       }
     }
     if (envPath) {
-      const newEnvChecksum = await getChecksum(join(projectPath, envPath))
+      const newEnvChecksum = await getChecksum(envPath)
       if (envChecksum !== newEnvChecksum) {
         envChecksum = newEnvChecksum
         changeEnv = true
@@ -200,7 +198,7 @@ async function startRouterBuilder(basePath: string) {
     appFolder,
     '**/{route,middleware,validation}.ts',
   )
-  rmdirSync(join(basePath, '.vulppi', 'app'), { recursive: true })
+  rmSync(join(basePath, '.vulppi', 'app'), { recursive: true })
   return Promise.all(
     appFiles.map(async (filename) => {
       const escapedPath = escapePath(filename, appFolder)

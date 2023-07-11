@@ -1,6 +1,5 @@
-import { resolve } from 'path'
 import { Worker } from 'worker_threads'
-import { getDirname } from '../utils/path'
+import { resolveModule } from '../utils/path'
 
 export async function callWorker({
   route,
@@ -8,7 +7,7 @@ export async function callWorker({
   data,
   config,
 }: CallWorkerProps) {
-  const wFile = resolve(getDirname(), 'worker-router.mjs')
+  const wFile = resolveModule('./worker-router.mjs')
 
   return new Promise<Vulppi.ResponseMessage>((resolve, reject) => {
     const worker = new Worker(wFile, {
