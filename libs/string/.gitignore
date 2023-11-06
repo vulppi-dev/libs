@@ -45,6 +45,3 @@ TODO.md
 
 # typescript
 *.tsbuildinfo
-
-# refactor
-.old

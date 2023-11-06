@@ -1,24 +1,40 @@
-# dependencies
-/node_modules
-package-lock.json
-*.pnp*
+# package
+node_modules/
+npm-debug.log
 
-# testing
-/coverage
-*.test*
+# IDE
+.idea/
 
-# development
-/src
-tsconfig.json
-.babelrc
-.gitignore
-
-# misc
+# OS files
 .DS_Store
-*.pem
+Thumbs.db
 
-# debug
-*.log*
+# log
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+pnpm-debug.log*
 
-# local env files
-*.env*
+# lock
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+
+# temporary
+*.swp
+*temp/
+*tmp/
+*.env
+*env.*
+
+# test
+coverage/
+.nyc_output/
+
+# typescript
+*.tsbuildinfo
+*tsconfig.json
+src/

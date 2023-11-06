@@ -1,7 +1,7 @@
 {
-  "name": "@vulppi/node-tree",
-  "version": "0.4.2",
-  "description": "A simple tree data structure for Node.js",
+  "name": "@vulppi/string",
+  "version": "0.0.1",
+  "description": "A string library for Vulppi",
   "license": "MIT",
   "private": false,
   "author": {
@@ -11,11 +11,39 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/vulppi-dev/libs.git",
-    "directory": "libs/node-tree"
+    "directory": "libs/string"
   },
   "keywords": [
-    "tree",
-    "node"
+    "vulppi",
+    "text",
+    "tools",
+    "utils",
+    "helpers",
+    "string",
+    "inject",
+    "injection",
+    "interpolation",
+    "interpolate",
+    "template",
+    "templates",
+    "format",
+    "formatting",
+    "replace",
+    "replacing",
+    "replaceall",
+    "replace-all",
+    "validate",
+    "validation",
+    "is",
+    "regexp",
+    "regex",
+    "regexes",
+    "regular",
+    "expression",
+    "expressions",
+    "match",
+    "matching",
+    "matches"
   ],
   "type": "module",
   "main": "dist/index.cjs",
