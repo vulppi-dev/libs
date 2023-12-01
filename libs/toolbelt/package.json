@@ -1,6 +1,6 @@
 {
   "name": "@vulppi/toolbelt",
-  "version": "0.6.5",
+  "version": "0.7.1",
   "license": "MIT",
   "private": false,
   "author": {
@@ -30,16 +30,12 @@
     ".": {
       "import": "./dist/index.mjs",
       "require": "./dist/index.cjs",
-      "types": "./dist/index.d.ts",
-      "node": "./dist/index.mjs",
-      "default": "./dist/index.js"
+      "types": "./dist/index.d.ts"
     },
     "./math": {
       "import": "./dist/math/index.mjs",
       "require": "./dist/math/index.cjs",
-      "types": "./dist/math/index.d.ts",
-      "node": "./dist/math/index.mjs",
-      "default": "./dist/math/index.js"
+      "types": "./dist/math/index.d.ts"
     }
   },
   "scripts": {
@@ -47,25 +43,24 @@
     "clear": "rimraf dist",
     "build:esm": "esbuild --bundle --minify --target=node18 --platform=node --format=esm --packages=external --out-extension:.js=.mjs --outdir=dist src/index.ts src/math/index.ts",
     "build:cjs": "esbuild --bundle --minify --target=node18 --platform=node --format=cjs --packages=external --out-extension:.js=.cjs --outdir=dist src/index.ts src/math/index.ts",
-    "build:iife": "esbuild --bundle --minify --target=node18 --platform=node --format=iife --packages=external  --outdir=dist src/index.ts src/math/index.ts",
     "build:types": "tsc",
     "dev": "run-p dev:*",
     "dev:esm": "esbuild --watch --bundle --minify --target=node18 --platform=node --format=esm --packages=external --out-extension:.js=.mjs --outdir=dist src/index.ts src/math/index.ts",
     "dev:cjs": "esbuild --watch --bundle --minify --target=node18 --platform=node --format=cjs --packages=external --out-extension:.js=.cjs --outdir=dist src/index.ts src/math/index.ts",
-    "dev:iife": "esbuild --watch --bundle --minify --target=node18 --platform=node --format=iife --packages=external  --outdir=dist src/index.ts src/math/index.ts",
     "dev:types": "tsc -w",
     "pub:latest": "npm publish --access=public --tag=latest"
   },
   "dependencies": {
-    "@types/pako": "^2.0.2",
+    "@types/pako": "^2.0.3",
+    "buffer": "^6.0.3",
     "pako": "^2.1.0"
   },
   "devDependencies": {
-    "@types/node": "^20.8.10",
-    "esbuild": "^0.19.5",
+    "@types/node": "^20.10.1",
+    "esbuild": "^0.19.8",
     "npm-run-all": "^4.1.5",
     "rimraf": "^5.0.5",
-    "typescript": "^5.2.2"
+    "typescript": "^5.3.2"
   },
   "engines": {
     "node": ">=18.0.0"

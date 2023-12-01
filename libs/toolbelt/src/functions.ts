@@ -1,3 +1,5 @@
+import { Buffer } from 'buffer'
+
 type UnionFunctionWithArgsType<Args extends any[] = any[]> = [
   (...args: Args) => {},
   ...Args,
