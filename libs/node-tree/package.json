@@ -1,6 +1,6 @@
 {
   "name": "@vulppi/node-tree",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "description": "A simple tree data structure for Node.js",
   "license": "MIT",
   "private": false,
