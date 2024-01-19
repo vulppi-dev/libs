@@ -3,12 +3,14 @@
     "src/**/*.ts"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "src/**/*.spec.ts",
   ],
   "compilerOptions": {
     "module": "ESNext",
     "target": "ESNext",
     "moduleResolution": "Bundler",
+    "baseUrl": "src",
     "outDir": "dist",
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
@@ -22,11 +24,5 @@
     "checkJs": false,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "baseUrl": "src",
-    "paths": {
-      "@/*": [
-        "*"
-      ]
-    }
   }
 }

@@ -271,6 +271,8 @@ export class VulppiNode<Props extends G = G> {
       i = index
     } else {
       i = this.findIndex(index)
+      if (i < 0) throw new Error('The node is not a child of this node')
+
       this._dispatchEvent('remove-child', {
         child: index,
         index: i,
