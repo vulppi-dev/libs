@@ -1,0 +1,23 @@
+{
+  "folders": [
+    {
+      "name": "node-tree",
+      "path": "./libs/node-tree"
+    },
+    {
+      "name": "string",
+      "path": "./libs/string"
+    },
+    {
+      "name": "toolbelt",
+      "path": "./libs/toolbelt"
+    },
+    {
+      "name": "root",
+      "path": "."
+    },
+  ],
+  "settings": {
+    "svg.preview.background": "editor"
+  }
+}
