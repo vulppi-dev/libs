@@ -13,6 +13,10 @@
       "path": "./libs/toolbelt"
     },
     {
+      "name": "tailwindcss",
+      "path": "./libs/tailwindcss"
+    },
+    {
       "name": "root",
       "path": "."
     },

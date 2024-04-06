@@ -1,0 +1,62 @@
+{
+  "name": "@vulppi/tailwindcss",
+  "version": "0.1.0",
+  "description": "A collection of plugins for TailwindCSS.",
+  "author": {
+    "name": "Renato Rodrigues",
+    "email": "renato@vulppi.dev"
+  },
+  "license": "MIT",
+  "private": false,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vulppi-dev/libs.git",
+    "directory": "libs/tailwindcss"
+  },
+  "keywords": [
+    "style",
+    "css",
+    "tailwindcss",
+    "tailwind",
+    "vulppi",
+    "plugins"
+  ],
+  "type": "module",
+  "module": "./dist/index.mjs",
+  "main": "./dist/index.cjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "run-s clear build:*",
+    "clear": "rimraf dist",
+    "build:esm": "esbuild --bundle --minify --target=node18 --platform=node --format=esm --packages=external --out-extension:.js=.mjs --outdir=dist src/index.ts",
+    "build:cjs": "esbuild --bundle --minify --target=node18 --platform=node --format=cjs --packages=external --out-extension:.js=.cjs --outdir=dist src/index.ts",
+    "build:types": "tsc",
+    "dev": "run-p dev:*",
+    "dev:esm": "esbuild --watch --bundle --minify --target=node18 --platform=node --format=esm --packages=external --out-extension:.js=.mjs --outdir=dist src/index.ts",
+    "dev:cjs": "esbuild --watch --bundle --minify --target=node18 --platform=node --format=cjs --packages=external --out-extension:.js=.cjs --outdir=dist src/index.ts",
+    "dev:types": "tsc -w",
+    "pub:latest": "npm publish --access=public --tag=latest"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.16",
+    "esbuild": "^0.20.0",
+    "npm-run-all": "^4.1.5",
+    "rimraf": "^5.0.5",
+    "tailwindcss": "^3.4.3",
+    "typescript": "^5.3.3"
+  },
+  "peerDependencies": {
+    "tailwindcss": "^3.4.3"
+  },
+  "dependencies": {
+    "@types/chroma-js": "^2.4.4",
+    "chroma-js": "^2.4.2"
+  }
+}
