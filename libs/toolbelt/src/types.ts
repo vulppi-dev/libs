@@ -1,7 +1,8 @@
-
 export declare type Null = null | undefined
 
 export declare type Nullable<T = any> = Null | T
+
+export declare type Nullish<T = any> = Nullable<T>
 
 /**
  * Generic type for html elements
@@ -17,19 +18,6 @@ export declare type Unstring<K extends string> = K | Omit<string, K>
  * Union of values of an array
  */
 export declare type ValuesOf<T extends readonly any[]> = T[number]
-
-/**
- * Array of function parameters
- */
-export declare type Args<F extends Function> = F extends (
-  ...args: infer A
-) => any
-  ? A
-  : never
-
-export declare type Arguments<F extends Function> = Args<F>
-
-export declare type Params<F extends Function> = Args<F>
 
 /**
  * Make all properties in T optional (deep)
@@ -78,6 +66,9 @@ type ArgsObject = {
   readonly [K in Num]?: string | number
 }
 
+/**
+ * Accepts generic strings and known string keys and injects values
+ */
 export declare type StringInjection<
   V extends string,
   A extends ArgsObject,
@@ -86,3 +77,10 @@ export declare type StringInjection<
     ? StringInjection<`${L}"${A[K1]}"${R}`, Omit<A, K1>>
     : StringInjection<`${L}${A[K1]}${R}`, Omit<A, K1>>
   : V
+
+/**
+ * Disposable type is a way to enforce that an object can be cleaned up when it is no longer needed
+ */
+export type Disposable = {
+  [Symbol.dispose]: () => void | Promise<void>
+}

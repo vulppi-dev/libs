@@ -1,9 +1,9 @@
 import { deflate, inflate } from 'pako'
 
-export const serializeObject = (obj: any) => {
+export function serializeObject(obj: any) {
   return deflate(JSON.stringify(obj))
 }
 
-export const deserializeObject = <R = any>(serial: ArrayBuffer): R => {
+export function deserializeObject<R = any>(serial: ArrayBuffer): R {
   return JSON.parse(inflate(serial, { to: 'string' }).toString())
 }
