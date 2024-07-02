@@ -17,6 +17,10 @@
       "path": "./libs/tailwindcss"
     },
     {
+      "name": "env",
+      "path": "./libs/env"
+    },
+    {
       "name": "root",
       "path": "."
     },
