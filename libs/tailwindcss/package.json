@@ -42,7 +42,7 @@
     "dev:esm": "esbuild --watch --bundle --minify --target=node18 --platform=node --format=esm --packages=external --out-extension:.js=.mjs --outdir=dist src/index.ts",
     "dev:cjs": "esbuild --watch --bundle --minify --target=node18 --platform=node --format=cjs --packages=external --out-extension:.js=.cjs --outdir=dist src/index.ts",
     "dev:types": "tsc -w",
-    "pub:latest": "npm publish --access=public --tag=latest"
+    "pub": "npm publish --access=public --tag=latest"
   },
   "devDependencies": {
     "@types/node": "^20.11.16",

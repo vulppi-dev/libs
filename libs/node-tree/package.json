@@ -42,7 +42,8 @@
     "dev:cjs": "esbuild --watch --bundle --minify --target=node18 --platform=node --format=cjs --packages=external --out-extension:.js=.cjs --outdir=dist src/index.ts",
     "dev:iife": "esbuild --watch --bundle --minify --target=node18 --platform=node --format=iife --packages=external  --outdir=dist src/index.ts",
     "dev:types": "tsc -w",
-    "test": "mocha --config mocha.config.json"
+    "test": "mocha --config mocha.config.json",
+    "pub": "npm publish --access=public --tag=latest"
   },
   "devDependencies": {
     "@types/chai": "^4.3.11",

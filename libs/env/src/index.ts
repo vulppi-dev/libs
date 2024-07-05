@@ -2,17 +2,17 @@ export const COMMENT_LINE_START = /^\s*#/
 export const PROPERTY_LINE_START = /^[a-zA-Z0-9_]+=.*/
 export const PROPERTY_LINE_VALIDATION = /^[a-zA-Z0-9_]+=.*/m
 
+export type EnvListItem = Record<'key' | 'value' | 'description', string>
+
 /**
- * Parses the input text into an object containing key-value pairs.
+ * Parses the input text into an array containing key-value pairs.
  *
  * @param {string} txt - The input text to parse
- * @return {Record<'key' | 'value' | 'description', string>[]} An array of objects with key, value, and description
+ * @return {EnvListItem[]} An array of objects with key, value, and description
  */
-export function parseEnvToObject(
-  txt: string,
-): Record<'key' | 'value' | 'description', string>[] {
+export function parseEnvToList(txt: string): EnvListItem[] {
   const lines = txt.split('\n')
-  const env: Record<'key' | 'value' | 'description', string>[] = []
+  const env: EnvListItem[] = []
 
   let lastIndex: number = -1
   let descriptions: string[] = []
@@ -64,12 +64,10 @@ export function parseEnvToObject(
 /**
  * Parses an array of objects containing key-value pairs and descriptions into a string representation of an environment file.
  *
- * @param {Record<'key' | 'value' | 'description', string>[]} env - An array of objects containing key-value pairs and descriptions.
+ * @param {EnvListItem[]} env - An array of objects containing key-value pairs and descriptions.
  * @return {string} A string representation of an environment file.
  */
-export function parseObjectToEnv(
-  env: Record<'key' | 'value' | 'description', string>[],
-): string {
+export function parseListToEnv(env: EnvListItem[]): string {
   return env
     .map(
       ({ key, value, description }) =>
