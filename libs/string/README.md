@@ -24,7 +24,7 @@ const injector = createInjector(
     uppercase: (value: string) => value.toUpperCase(),
     lowercase: (value: string) => value.toLowerCase(),
     capitalize: (value: string) =>
-      value.charAt(0).toUpperCase() + value.slice(1),
+      value.charAt(0).toUpperCase() + value.slice(1).toLowerCase(),
     date: (value: string) =>
       new Intl.DateTimeFormat('en-US').format(new Date(value)),
   },
