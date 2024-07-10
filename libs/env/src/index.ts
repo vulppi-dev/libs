@@ -69,9 +69,14 @@ export function parseEnvToList(txt: string): EnvListItem[] {
  */
 export function parseListToEnv(env: EnvListItem[]): string {
   return env
-    .map(
-      ({ key, value, description }) =>
-        `${description.replace(/\n/g, '\n# ')}\n${key}=${value}`,
-    )
+    .map(({ key, value, description }) => {
+      const result = `${key}=${value}`
+
+      if (description) {
+        return `${description.replace(/\n/g, '\n# ')}\n${result}`
+      } else {
+        return result
+      }
+    })
     .join('\n')
 }

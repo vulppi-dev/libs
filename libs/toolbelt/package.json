@@ -1,6 +1,6 @@
 {
   "name": "@vulppi/toolbelt",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A collection of tools and utilities for Node.js and TypeScript.",
   "author": {
     "name": "Renato Rodrigues",
@@ -63,15 +63,9 @@
     }
   },
   "scripts": {
-    "build": "run-s clear build:*",
+    "dev": "tsc --watch --noEmit true --emitDeclarationOnly false",
+    "build": "bun ./scripts/build index form/index math/index node/index serial/index",
     "clear": "rimraf dist",
-    "build:esm": "esbuild --bundle --minify --target=node20 --platform=node --format=esm --packages=external --out-extension:.js=.mjs --outdir=dist src/index.ts src/form/index.ts src/math/index.ts src/node/index.ts src/serial/index.ts",
-    "build:cjs": "esbuild --bundle --minify --target=node20 --platform=node --format=cjs --packages=external --out-extension:.js=.cjs --outdir=dist src/index.ts src/form/index.ts src/math/index.ts src/node/index.ts src/serial/index.ts",
-    "build:types": "tsc",
-    "dev": "run-p dev:*",
-    "dev:esm": "esbuild --watch --bundle --minify --target=node20 --platform=node --format=esm --packages=external --out-extension:.js=.mjs --outdir=dist src/index.ts src/form/index.ts src/math/index.ts src/node/index.ts src/serial/index.ts",
-    "dev:cjs": "esbuild --watch --bundle --minify --target=node20 --platform=node --format=cjs --packages=external --out-extension:.js=.cjs --outdir=dist src/index.ts src/form/index.ts src/math/index.ts src/node/index.ts src/serial/index.ts",
-    "dev:types": "tsc -w",
     "pub": "npm publish --access=public --tag=latest"
   },
   "dependencies": {
@@ -80,13 +74,13 @@
     "pako": "^2.1.0"
   },
   "devDependencies": {
-    "@types/node": "^20.14.8",
-    "esbuild": "^0.21.5",
-    "npm-run-all": "^4.1.5",
-    "rimraf": "^5.0.7",
-    "typescript": "^5.5.2"
+    "@types/node": "^20.14.10",
+    "dts-bundle-generator": "^9.5.1",
+    "esbuild": "^0.23.0",
+    "rimraf": "^6.0.0",
+    "typescript": "^5.5.3"
   },
   "engines": {
-    "node": ">=20.0.0"
+    "node": ">=18.0.0"
   }
 }

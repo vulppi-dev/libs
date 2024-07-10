@@ -1,6 +1,6 @@
 {
   "name": "@vulppi/env",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "A ENV utilities for Vulppi",
   "license": "MIT",
   "private": false,
@@ -39,28 +39,22 @@
     }
   },
   "scripts": {
-    "build": "run-s clear build:*",
+    "dev": "tsc --watch --noEmit true --emitDeclarationOnly false",
+    "build": "bun ./scripts/build index",
     "clear": "rimraf dist",
-    "build:esm": "esbuild --bundle --minify --target=node18 --platform=node --format=esm --packages=external --out-extension:.js=.mjs --outdir=dist src/index.ts",
-    "build:cjs": "esbuild --bundle --minify --target=node18 --platform=node --format=cjs --packages=external --out-extension:.js=.cjs --outdir=dist src/index.ts",
-    "build:iife": "esbuild --bundle --minify --target=node18 --platform=node --format=iife --packages=external  --outdir=dist src/index.ts",
-    "build:types": "tsc",
-    "dev": "run-p dev:*",
-    "dev:esm": "esbuild --watch --bundle --minify --target=node18 --platform=node --format=esm --packages=external --out-extension:.js=.mjs --outdir=dist src/index.ts",
-    "dev:cjs": "esbuild --watch --bundle --minify --target=node18 --platform=node --format=cjs --packages=external --out-extension:.js=.cjs --outdir=dist src/index.ts",
-    "dev:iife": "esbuild --watch --bundle --minify --target=node18 --platform=node --format=iife --packages=external  --outdir=dist src/index.ts",
-    "dev:types": "tsc -w",
     "pub": "npm publish --access=public --tag=latest"
   },
-  "dependencies": {},
   "devDependencies": {
-    "@types/node": "^20.14.9",
+    "@types/node": "^20.14.10",
+    "dts-bundle-generator": "^9.5.1",
     "esbuild": "^0.23.0",
+    "esbuild-plugin-tsc": "^0.4.0",
     "npm-run-all": "^4.1.5",
-    "rimraf": "^5.0.7",
+    "rimraf": "^6.0.0",
     "typescript": "^5.5.3"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=18.0.0",
+    "bun": ">=1.1.0"
   }
 }
