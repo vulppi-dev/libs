@@ -459,8 +459,15 @@ export class VulppiNode<Props extends G = G> {
   /**
    * Converts the node into a json object in string.
    */
-  toJSON() {
+  toJSON(prettier = true) {
+    if (prettier) {
+      JSON.stringify(this.toObject(), null, 2)
+    }
     return JSON.stringify(this.toObject())
+  }
+
+  toString() {
+    return this.toJSON(true)
   }
 
   /**
