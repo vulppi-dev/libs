@@ -1,20 +1,20 @@
 {
   "folders": [
     {
-      "name": "node-tree",
-      "path": "./libs/node-tree"
+      "name": "toolbelt",
+      "path": "./libs/toolbelt"
     },
     {
       "name": "string",
       "path": "./libs/string"
     },
     {
-      "name": "toolbelt",
-      "path": "./libs/toolbelt"
-    },
-    {
       "name": "tailwindcss",
       "path": "./libs/tailwindcss"
+    },
+    {
+      "name": "node-tree",
+      "path": "./libs/node-tree"
     },
     {
       "name": "env",
