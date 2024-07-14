@@ -1,3 +1,4 @@
+# Vulppi
 # package
 node_modules/
 npm-debug.log
@@ -23,6 +24,13 @@ package-lock.json
 pnpm-lock.yaml
 yarn.lock
 
+# build
+.intrest/
+build/
+dist/
+*.gem
+*.egg
+
 # temporary
 *.swp
 *temp/
@@ -33,9 +41,7 @@ yarn.lock
 # test
 coverage/
 .nyc_output/
+TODO.md
 
 # typescript
 *.tsbuildinfo
-*tsconfig.json
-src/
-scripts/

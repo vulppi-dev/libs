@@ -26,8 +26,6 @@ yarn.lock
 
 # build
 .intrest/
-build/
-dist/
 *.gem
 *.egg
 
