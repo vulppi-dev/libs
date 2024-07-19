@@ -148,10 +148,9 @@ export function createThemeColors<C extends Record<string, Palette>>({
         colors: resultColors,
         extend: {
           colors: {
-            screen:
-              'color(from var(--color-screen) display-p3 r g b / <alpha-value>)',
+            screen: 'oklch(from var(--color-screen) l c h / <alpha-value>)',
             'screen-text':
-              'color(from var(--color-screen-text) display-p3 r g b / <alpha-value>)',
+              'oklch(from var(--color-screen-text) l c h / <alpha-value>)',
 
             'var-display': 'var(--color-var-display)',
             'var-label': 'var(--color-var-label)',

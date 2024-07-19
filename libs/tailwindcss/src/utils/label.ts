@@ -36,7 +36,7 @@ export function genColorLabel<P extends Record<string, Palette>>({
 
     res[
       `${label}${k}`
-    ] = `color(from var(--color-${label}${k}) display-p3 r g b / <alpha-value>) /* ${preview} */`
+    ] = `oklch(from var(--color-${label}${k}) l c h / <alpha-value>) /* ${preview} */`
   }
 
   return res
