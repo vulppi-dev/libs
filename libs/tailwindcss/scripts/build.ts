@@ -12,8 +12,7 @@ const baseConfig = {
   outdir: 'dist',
   packages: 'external',
   target: 'node18',
-  minifyWhitespace: true,
-  minifySyntax: true,
+  minify: true,
   plugins: [tscPlugin({ force: true })],
 } satisfies BuildOptions
 

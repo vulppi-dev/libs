@@ -21,6 +21,10 @@
       "path": "./libs/env"
     },
     {
+      "name": "promise-lock",
+      "path": "./libs/promise-lock"
+    },
+    {
       "name": "root",
       "path": "."
     },
