@@ -1,6 +1,6 @@
 {
   "name": "@vulppi/string",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "A string library for Vulppi",
   "license": "MIT",
   "private": false,
@@ -66,10 +66,10 @@
   },
   "dependencies": {},
   "devDependencies": {
-    "@types/node": "^20.14.10",
+    "@types/node": "^20.14.12",
     "esbuild": "^0.23.0",
     "rimraf": "^6.0.1",
-    "typescript": "^5.5.3"
+    "typescript": "^5.5.4"
   },
   "engines": {
     "node": ">=18.0.0"
