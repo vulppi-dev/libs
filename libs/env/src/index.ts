@@ -73,7 +73,7 @@ export function parseListToEnv(env: EnvListItem[]): string {
       const result = `${key}=${value}`
 
       if (description) {
-        return `${description.replace(/\n/g, '\n# ')}\n${result}`
+        return `#${description.replace(/\n/g, '\n# ')}\n${result}`
       } else {
         return result
       }
