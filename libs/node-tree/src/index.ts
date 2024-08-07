@@ -1,3 +1,5 @@
+import { EventEmitter } from 'events'
+
 type G<P = any> = Record<string | symbol, P>
 
 export interface ParsedNode<Props extends G = G> {
@@ -8,47 +10,32 @@ export interface ParsedNode<Props extends G = G> {
   children: ParsedNode[]
 }
 
-export type Events =
-  | 'add-child'
-  | 'remove-child'
-  | 'change-property'
-  | 'change-flag'
-
 export interface VulppiNodeEventTypes {
-  'add-child': {
-    child: VulppiNode
-    index: number
-  }
-  'remove-child': {
-    child: VulppiNode
-    index: number
-  }
-  'change-property': {
-    name: string | symbol
-    value: any
-    oldValue: any
-  }
-  'change-flag': {
-    name: string | symbol
-    value: boolean
-    oldValue: boolean
-  }
+  'add-child': [VulppiNode, number]
+  'remove-child': [VulppiNode, number]
+  'change-property': [
+    {
+      name: string | symbol
+      value: any
+      oldValue: any
+    },
+  ]
+  'change-flag': [
+    {
+      name: string | symbol
+      value: any
+      oldValue: any
+    },
+  ]
 }
 
-export type VulppiNodeEventCallbackTypes = {
-  [K in Events]: (ev: VulppiNodeEventTypes[K]) => void
-} & {
-  [key: string]: (ev: any) => void
-}
-
-export class VulppiNode<Props extends G = G> {
+export class VulppiNode<
+  Props extends G = G,
+> extends EventEmitter<VulppiNodeEventTypes> {
   private _id: string
   private _parent: VulppiNode | null = null
   private _prevSibling: VulppiNode | null = null
   private _nextSibling: VulppiNode | null = null
-  private _eventHandlers: {
-    [K in Events]?: Function[]
-  }
   private _children: VulppiNode[]
   private _properties: Props
   private _flags: G<boolean>
@@ -61,12 +48,13 @@ export class VulppiNode<Props extends G = G> {
    */
   name?: string
 
-  constructor(id: string, name?: string) {
-    this._id = id
-    this.name = name
+  constructor(options: { id: string; name?: string }) {
+    super()
+
+    this._id = options.id
+    this.name = options.name
 
     this._children = []
-    this._eventHandlers = {}
     this._properties = {} as Props
     this._flags = {}
     this._pProperties = new Proxy(this._properties, {
@@ -74,7 +62,7 @@ export class VulppiNode<Props extends G = G> {
         return target[name]
       },
       set: (target: any, name, value) => {
-        this._dispatchEvent('change-property', {
+        this.emit('change-property', {
           name,
           value,
           oldValue: target[name],
@@ -88,7 +76,7 @@ export class VulppiNode<Props extends G = G> {
         return target[name]
       },
       set: (target, name, value) => {
-        this._dispatchEvent('change-flag', {
+        this.emit('change-flag', {
           name,
           value,
           oldValue: target[name],
@@ -165,7 +153,7 @@ export class VulppiNode<Props extends G = G> {
    * Cleanly clone the node and all of its children.
    */
   clone() {
-    const clone = new VulppiNode(this.id)
+    const clone = new VulppiNode({ id: this.id })
     clone.name = this.name
     for (const k in this._properties) {
       clone._properties[k] = this._properties[k]
@@ -239,14 +227,15 @@ export class VulppiNode<Props extends G = G> {
       child._children.forEach((c) => same.addChild(c))
     }
 
-    this._dispatchEvent('add-child', {
-      child: same || child,
-      index: same
+    this.emit(
+      'add-child',
+      same || child,
+      same
         ? this.findIndex(same)
         : index >= 0
         ? index
         : this._children.length - 1,
-    })
+    )
   }
 
   /**
@@ -273,10 +262,7 @@ export class VulppiNode<Props extends G = G> {
       i = this.findIndex(index)
       if (i < 0) throw new Error('The node is not a child of this node')
 
-      this._dispatchEvent('remove-child', {
-        child: index,
-        index: i,
-      })
+      this.emit('remove-child', index, i)
       index._parent = null
       c = this._children.splice(i, 1)[0] || null
     }
@@ -297,10 +283,7 @@ export class VulppiNode<Props extends G = G> {
         nn._nextSibling = null
       }
 
-      this._dispatchEvent('remove-child', {
-        child: c,
-        index: i,
-      })
+      this.emit('remove-child', c, i)
     }
     return c
   }
@@ -360,39 +343,6 @@ export class VulppiNode<Props extends G = G> {
     }
 
     return buffer
-  }
-
-  /**
-   * Add an event point to the node.
-   */
-  on<T extends Events>(event: T, cb: VulppiNodeEventCallbackTypes[T]) {
-    if (!this._eventHandlers[event]) this._eventHandlers[event] = []
-    this._eventHandlers[event]?.push(cb)
-  }
-
-  /**
-   * Remove an event point to the node.
-   */
-  off<T extends Events>(
-    event: T,
-    cb: VulppiNodeEventCallbackTypes[T],
-  ): Function | null {
-    if (!this._eventHandlers[event]) this._eventHandlers[event] = []
-    const index = this._eventHandlers[event]?.indexOf(cb) || -1
-    if (index < 0) return null
-    return this._eventHandlers[event]?.splice(index, 1)[0] || null
-  }
-
-  private _dispatchEvent<E extends Events>(
-    event: E,
-    ev: VulppiNodeEventTypes[E],
-  ) {
-    const targets = this._eventHandlers[event]
-    if (targets) {
-      targets.forEach((call) => {
-        call(ev)
-      })
-    }
   }
 
   /**
@@ -476,7 +426,7 @@ export class VulppiNode<Props extends G = G> {
   static fromObject(data: ParsedNode) {
     if (!('id' in data)) return
 
-    const node = new VulppiNode(data.id)
+    const node = new VulppiNode({ id: data.id })
     node.name = data.name
     Object.assign(node._properties, data.props || {})
     Object.assign(node._flags, data.flags || {})

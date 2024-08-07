@@ -1,7 +1,7 @@
 {
   "name": "@vulppi/node-tree",
-  "version": "0.4.4",
-  "description": "A simple tree data structure for Node.js",
+  "version": "0.5.0",
+  "description": "A simple tree data structure for typescript",
   "license": "MIT",
   "private": false,
   "author": {
@@ -15,7 +15,10 @@
   },
   "keywords": [
     "tree",
-    "node"
+    "node",
+    "provider",
+    "react",
+    "reactivity"
   ],
   "type": "module",
   "main": "dist/index.cjs",
@@ -36,17 +39,20 @@
     "clear": "rimraf dist",
     "pub": "npm publish --access=public --tag=latest"
   },
+  "dependencies": {
+    "events": "^3.3.0"
+  },
   "devDependencies": {
-    "@types/chai": "^4.3.16",
+    "@types/chai": "^4.3.17",
     "@types/mocha": "^10.0.7",
-    "@types/node": "^20.14.10",
+    "@types/node": "^22.1.0",
     "chai": "^5.1.1",
     "dts-bundle-generator": "^9.5.1",
     "esbuild": "^0.23.0",
-    "mocha": "^10.6.0",
+    "mocha": "^10.7.0",
     "rimraf": "^6.0.1",
     "ts-node": "^10.9.2",
-    "typescript": "^5.5.3"
+    "typescript": "^5.5.4"
   },
   "engines": {
     "node": ">=18.0.0"
