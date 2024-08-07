@@ -7,13 +7,19 @@ function getPromiseTuple() {
 /**
  * Creates a lock object that can be used to synchronize access to a shared resource.
  *
+ * @param opt.timeout - The timeout in milliseconds for acquiring the lock.
+ *  Defaults to 20 seconds.
+ *  If timeout is 0, it will never timeout.
+ *
  * @return An object with the following properties:
  *   - `length`: A getter function that returns the current number of active locks.
  *   - `lock`: An asynchronous function that returns a lock object. When called, it increments the `length` property and waits for any previously acquired locks to be released before resolving. The lock object has the following properties:
  *     - `length`: A getter function that returns the current number of active locks.
  *     - `unlock`: A function that releases the lock by decrementing the `length` property and resolving any waiting locks.
  */
-export function createLocker() {
+export function createLocker(opt?: { timeout?: number }) {
+  const { timeout = 20000 } = opt || {}
+
   let last_promise: Promise<void> | undefined = undefined
   let length = 0
 
@@ -39,8 +45,18 @@ export function createLocker() {
       const [resolve, promise] = getPromiseTuple()
       last_promise = promise
 
+      const unlock = () => {
+        resolve()
+        length--
+        if (length === 0) last_promise = undefined
+      }
+
       if (last) {
         await last
+      }
+
+      if (timeout > 0) {
+        setTimeout(unlock, timeout)
       }
 
       return {
@@ -49,17 +65,13 @@ export function createLocker() {
          *
          * @return {number} The current number of active locks.
          */
-        get length() {
+        get length(): number {
           return length
         },
         /**
          *  A function that releases the lock for the next lock can run.
          */
-        unlock() {
-          resolve()
-          length--
-          if (length === 0) last_promise = undefined
-        },
+        unlock,
       }
     },
   }

@@ -9,7 +9,7 @@ You can use the following:
 ```ts
 import { createLocker } from '@vulppi/promise-lock'
 
-const locker = createLocker()
+const locker = createLocker({ timeout: 20000 }) // 20 seconds timeout
 
 async function randomDelay(index: number) {
   const lock = await locker.lock()
