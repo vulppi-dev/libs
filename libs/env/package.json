@@ -40,18 +40,13 @@
   },
   "scripts": {
     "dev": "tsc --watch --noEmit true --emitDeclarationOnly false",
-    "build": "bun ./scripts/build index",
-    "clear": "rimraf dist",
+    "build": "vpp build index",
     "pub": "npm publish --access=public --tag=latest"
   },
   "devDependencies": {
     "@types/node": "^20.14.12",
-    "dts-bundle-generator": "^9.5.1",
-    "esbuild": "^0.23.0",
-    "esbuild-plugin-tsc": "^0.4.0",
-    "npm-run-all": "^4.1.5",
-    "rimraf": "^6.0.1",
-    "typescript": "^5.5.4"
+    "typescript": "^5.5.4",
+    "vulppi": "^0.1.0-alpha7"
   },
   "engines": {
     "node": ">=18.0.0",

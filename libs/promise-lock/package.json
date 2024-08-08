@@ -36,15 +36,13 @@
   },
   "scripts": {
     "dev": "tsc --watch --noEmit true --emitDeclarationOnly false",
-    "build": "bun ./scripts/build index",
+    "build": "vpp build index",
     "clear": "rimraf dist",
     "pub": "npm publish --access=public --tag=latest"
   },
   "devDependencies": {
     "@types/node": "^20.14.12",
-    "dts-bundle-generator": "^9.5.1",
-    "esbuild": "^0.23.0",
-    "rimraf": "^6.0.1",
-    "typescript": "^5.5.4"
+    "typescript": "^5.5.4",
+    "vulppi": "^0.1.0-alpha7"
   }
 }

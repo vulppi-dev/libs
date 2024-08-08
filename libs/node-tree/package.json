@@ -35,8 +35,7 @@
   },
   "scripts": {
     "dev": "tsc --watch --noEmit true --emitDeclarationOnly false",
-    "build": "bun ./scripts/build index",
-    "clear": "rimraf dist",
+    "build": "vpp build index",
     "pub": "npm publish --access=public --tag=latest"
   },
   "dependencies": {
@@ -47,12 +46,10 @@
     "@types/mocha": "^10.0.7",
     "@types/node": "^22.1.0",
     "chai": "^5.1.1",
-    "dts-bundle-generator": "^9.5.1",
-    "esbuild": "^0.23.0",
     "mocha": "^10.7.0",
-    "rimraf": "^6.0.1",
     "ts-node": "^10.9.2",
-    "typescript": "^5.5.4"
+    "typescript": "^5.5.4",
+    "vulppi": "^0.1.0-alpha7"
   },
   "engines": {
     "node": ">=18.0.0"
