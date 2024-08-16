@@ -1,7 +1,11 @@
+type Resolver = (arg: boolean) => void
+
 function getPromiseTuple() {
-  let resolve: VoidFunction
-  const promise = new Promise<void>((r) => (resolve = r))
-  return [() => resolve(), promise] as const
+  let resolve: Resolver
+  const promise = new Promise<boolean>((rs) => {
+    resolve = rs
+  })
+  return [(arg: boolean) => resolve(arg), promise] as const
 }
 
 /**
@@ -20,7 +24,7 @@ function getPromiseTuple() {
 export function createLocker(opt?: { timeout?: number }) {
   const { timeout = 20000 } = opt || {}
 
-  let last_promise: Promise<void> | undefined = undefined
+  let last_promise: Promise<boolean> | undefined = undefined
   let length = 0
 
   return {
@@ -46,13 +50,27 @@ export function createLocker(opt?: { timeout?: number }) {
       last_promise = promise
 
       const unlock = () => {
-        resolve()
+        resolve(true)
         length--
-        if (length === 0) last_promise = undefined
+        if (length === 0) {
+          last_promise = undefined
+        }
+      }
+
+      const stopPropagation = () => {
+        resolve(false)
+        length--
+        if (length === 0) {
+          last_promise = undefined
+        }
       }
 
       if (last) {
-        await last
+        const result = await last
+        if (!result) {
+          stopPropagation()
+          throw new Error('The propagation was interrupted')
+        }
       }
 
       if (timeout > 0) {
@@ -69,9 +87,13 @@ export function createLocker(opt?: { timeout?: number }) {
           return length
         },
         /**
-         *  A function that releases the lock for the next lock can run.
+         * A function that releases the lock for the next lock can run.
          */
         unlock,
+        /**
+         * A function that releases the lock and stops propagation.
+         */
+        stopPropagation,
       }
     },
   }
