@@ -1,13 +1,3 @@
-type Resolver = (arg: boolean) => void
-
-function getPromiseTuple() {
-  let resolve: Resolver
-  const promise = new Promise<boolean>((rs) => {
-    resolve = rs
-  })
-  return [(arg: boolean) => resolve(arg), promise] as const
-}
-
 /**
  * Creates a lock object that can be used to synchronize access to a shared resource.
  *
@@ -46,7 +36,7 @@ export function createLocker(opt?: { timeout?: number }) {
     async lock() {
       length++
       const last = last_promise
-      const [resolve, promise] = getPromiseTuple()
+      const { resolve, promise } = Promise.withResolvers<boolean>()
       last_promise = promise
 
       const unlock = () => {
