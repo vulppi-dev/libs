@@ -16,10 +16,14 @@ export function serializeForm(
       const keys = k.split('.')
       let current = result
       for (let i = 0; i < keys.length; i++) {
+        const kk = parseKey(keys[i])
+
         if (i === keys.length - 1) {
-          current[keys[i]] = body[k]
+          current[kk] = body[k]
         } else {
-          current = current[keys[i]] = current[keys[i]] || {}
+          const nk = parseKey(keys[i + 1])
+          const isNumber = typeof nk === 'number'
+          current = current[kk] = current[kk] || (isNumber ? [] : {})
         }
       }
     } else {
@@ -28,4 +32,11 @@ export function serializeForm(
   }
 
   return result
+}
+
+function parseKey(k: string) {
+  if (/^\d+$/.test(k.trim())) {
+    return parseInt(k)
+  }
+  return k.trim()
 }
