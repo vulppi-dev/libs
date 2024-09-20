@@ -33,6 +33,7 @@ export class VulppiNode<
   Props extends G = G,
 > extends EventEmitter<VulppiNodeEventTypes> {
   private _id: string
+  private _name?: string
   private _parent: VulppiNode | null = null
   private _prevSibling: VulppiNode | null = null
   private _nextSibling: VulppiNode | null = null
@@ -43,10 +44,8 @@ export class VulppiNode<
   private _pProperties: G
   private _pFlags: G<boolean>
 
-  /**
-   * It is an optional field to find the node in the entire tree, returning a list of nodes with the same name.
-   */
-  name?: string
+  private _idIndex: Map<string, VulppiNode> = new Map()
+  private _nameIndex: Map<string, VulppiNode[]> = new Map()
 
   constructor(options: { id: string; name?: string }) {
     super()
@@ -93,6 +92,17 @@ export class VulppiNode<
    */
   get id() {
     return this._id
+  }
+
+  /**
+   * It is an optional field to find the node in the entire tree, returning a list of nodes with the same name.
+   */
+  get name() {
+    return this._name
+  }
+
+  set name(name: string | undefined) {
+    this._name = name
   }
 
   /**
@@ -155,12 +165,8 @@ export class VulppiNode<
   clone() {
     const clone = new VulppiNode({ id: this.id })
     clone.name = this.name
-    for (const k in this._properties) {
-      clone._properties[k] = this._properties[k]
-    }
-    for (const k in this._flags) {
-      clone._flags[k] = this._flags[k]
-    }
+    clone._properties = structuredClone(this._properties)
+    clone._flags = structuredClone(this._flags)
     clone._children = this._children.map((c) => c.clone())
     return clone
   }
@@ -210,20 +216,16 @@ export class VulppiNode<
         const nextNode = this._children[index + 1] || null
         child._prevSibling = prevNode
         child._nextSibling = nextNode
-        prevNode._nextSibling = child
-        nextNode._prevSibling = child
+        if (prevNode) prevNode._nextSibling = child
+        if (nextNode) nextNode._prevSibling = child
       } else {
         const prevNode = this._children[this._children.length - 1] || null
         child._prevSibling = prevNode
         this._children.push(child)
       }
     } else {
-      for (const k in child._properties) {
-        same._properties[k] = child._properties[k]
-      }
-      for (const k in child._flags) {
-        same._flags[k] = child._flags[k]
-      }
+      same._properties = structuredClone(child._properties)
+      same._flags = structuredClone(child._flags)
       child._children.forEach((c) => same.addChild(c))
     }
 
@@ -280,10 +282,12 @@ export class VulppiNode<
       } else if (pn) {
         pn._nextSibling = null
       } else if (nn) {
-        nn._nextSibling = null
+        nn._prevSibling = null
       }
 
-      this.emit('remove-child', c, i)
+      if (typeof index !== 'number') {
+        this.emit('remove-child', c, i)
+      }
     }
     return c
   }
@@ -319,8 +323,7 @@ export class VulppiNode<
    * Finds a child node from its ID.
    */
   findChild(id: string): VulppiNode | null {
-    for (const k in this._children) {
-      const c = this._children[k]
+    for (const c of this._children) {
       if (c.id === id) return c
 
       const cc = c.findChild(id)
@@ -335,8 +338,7 @@ export class VulppiNode<
   findByName(name: string): VulppiNode[] {
     const buffer: VulppiNode[] = []
 
-    for (const k in this._children) {
-      const c = this._children[k]
+    for (const c of this._children) {
       if (c.name === name) buffer.push(c)
       const cc = c.findByName(name)
       buffer.push(...cc)
@@ -411,7 +413,7 @@ export class VulppiNode<
    */
   toJSON(prettier = true) {
     if (prettier) {
-      JSON.stringify(this.toObject(), null, 2)
+      return JSON.stringify(this.toObject(), null, 2)
     }
     return JSON.stringify(this.toObject())
   }
