@@ -11,20 +11,34 @@ import {
 } from 'zlib'
 import { Buffer } from 'buffer'
 
-export const extractTokenFromAuthorization = (
-  authorization?: string | null,
-) => {
+/**
+ * Extracts the token from the Authorization header.
+ *
+ * @param {string | null} authorization - The Authorization header value.
+ * @returns {string | null} The extracted token or null if not found.
+ */
+export function extractTokenFromAuthorization(authorization?: string | null) {
   if (!authorization) {
     return null
   }
-  if (/^bearer .+/i.test(authorization)) {
-    return authorization.substring(7)
+
+  const trimmed = authorization.trim()
+
+  const bearerMatch = trimmed.match(/^Bearer\s+(.+)$/i)
+  if (bearerMatch) {
+    return bearerMatch[1]
   }
-  if (/^basic .+/i.test(authorization)) {
-    const t = authorization.substring(6)
-    return Buffer.from(t, 'base64').toString('utf-8')
+
+  const basicMatch = trimmed.match(/^Basic\s+(.+)$/i)
+  if (basicMatch) {
+    try {
+      return Buffer.from(basicMatch[1], 'base64').toString('utf-8')
+    } catch (_) {
+      return null
+    }
   }
-  return authorization ?? null
+
+  return null
 }
 
 export type RequestEncoding = 'gzip' | 'x-gzip' | 'deflate' | 'identity'

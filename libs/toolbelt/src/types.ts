@@ -79,7 +79,10 @@ export declare type StringInjection<
   : V
 
 /**
- * Disposable type is a way to enforce that an object can be cleaned up when it is no longer needed
+ * The Disposable type defines an interface for objects that require cleanup
+ * when they are no longer in use. It ensures that a cleanup method,
+ * typically called `dispose`, is implemented, allowing for proper resource
+ * management and preventing memory leaks.
  */
 export type Disposable = {
   [Symbol.dispose]: () => void | Promise<void>

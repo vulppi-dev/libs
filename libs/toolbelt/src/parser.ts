@@ -30,19 +30,20 @@ export function parseStringBytesToNumber(bytes: string | number): number {
 }
 
 /**
- * If detect string is number or boolean, parse it to number or boolean
+ * Parses a string to its corresponding primitive value (number, boolean, null, undefined, NaN, Infinity).
+ * Returns the original string if it doesn't match any known primitive value representations.
  */
-export function parseStringToAutoDetectValue(val?: string | null) {
-  switch (true) {
-    case val == null:
-      return undefined
-    case /^(no|n|false|f|off)$/i.test(val!):
-      return false
-    case /^(yes|y|true|t|on)$/i.test(val!):
-      return true
-    case !isNaN(parseFloat(val!)):
-      return parseFloat(val!)
-    default:
-      return val
-  }
+export function parseStringToAutoDetectPrimitiveValue(val?: string | null) {
+  const value = val?.trim().toLowerCase()
+
+  if (value == null || value === '') return undefined
+  if (value === 'null') return null
+  if (value === 'undefined') return undefined
+  if (value === 'nan') return NaN
+  if (value === 'infinity') return Infinity
+  if (value === '-infinity') return -Infinity
+  if (/^(no|n|false|f|off)$/i.test(value)) return false
+  if (/^(yes|y|true|t|on)$/i.test(value)) return true
+  if (!isNaN(Number(value))) return Number(value)
+  return value
 }
