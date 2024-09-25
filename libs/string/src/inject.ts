@@ -14,25 +14,27 @@ type InputMatch = {
   filters: FilterMatch[]
 }
 
+type FilterFunction = (value: any, ...params: any[]) => any
+
 function extractFilter(str: string) {
-  const splitFilter = str.split('(')
-  const key = str.split('(')[0]
-  const params = splitFilter[1]
-    ? splitFilter[1]
-        .slice(0, -1)
-        .trim()
-        .split(/\s*,\s*/)
+  const filterRegex = /^([^\(]+)(?:\((.*)\))?$/
+  const match = str.match(filterRegex)
+  if (!match) return { key: str, params: [] }
+
+  const key = match[1].trim()
+  const paramsStr = match[2] || ''
+  const params = paramsStr
+    ? paramsStr.split(/\s*,\s*/).map((param) => param.trim())
     : []
-  return {
-    key,
-    params,
-  }
+
+  return { key, params }
 }
 
 function extractAllInputs(str: string) {
   const inputs: InputMatch[] = []
-  let match: RegExpExecArray | null
-  while ((match = bracketsFinder.exec(str)) !== null) {
+  const matches = [...str.matchAll(bracketsFinder)]
+
+  for (const match of matches) {
     if (!match.groups) continue
     const { props, filters, variable } = match.groups
     const start = match.index
@@ -42,7 +44,7 @@ function extractAllInputs(str: string) {
       end,
       variable,
       props: props.split('.'),
-      filters: filters ? filters.split('|').map(extractFilter) : [],
+      filters: filters ? filters.split(/\s*\|\s*/).map(extractFilter) : [],
     })
   }
   return inputs
@@ -50,12 +52,12 @@ function extractAllInputs(str: string) {
 
 function getFromObject(obj: Record<string, any>, path: string[]) {
   return path.reduce((acc, prop) => {
-    return acc[prop]
+    return acc?.[prop]
   }, obj) as any
 }
 
-export function createInjector(filters: Record<string, Function> = {}) {
-  const filtersMap = new Map<string, Function>()
+export function createInjector(filters: Record<string, FilterFunction> = {}) {
+  const filtersMap = new Map<string, FilterFunction>()
   for (const [key, filter] of Object.entries(filters)) {
     filtersMap.set(key, filter)
   }
@@ -66,9 +68,10 @@ export function createInjector(filters: Record<string, Function> = {}) {
     variablesMap: Map<string, any>,
   ) {
     const { variable, props, filters } = input
-    const value =
-      (variablesMap.get(props[0] || '') || getFromObject(data, props)) ??
-      undefined
+    const value = variablesMap.has(props[0] || '')
+      ? variablesMap.get(props[0] || '')
+      : getFromObject(data, props) ?? undefined
+
     const result = filters.reduce((acc, filter) => {
       const { key, params } = filter
       const filterFn = filtersMap.get(key)

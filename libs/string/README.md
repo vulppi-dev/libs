@@ -21,12 +21,20 @@ import { createInjector } from '@vulppi/string'
 const injector = createInjector(
   // The filters for manipulate data
   {
-    uppercase: (value: string) => value.toUpperCase(),
-    lowercase: (value: string) => value.toLowerCase(),
-    capitalize: (value: string) =>
-      value.charAt(0).toUpperCase() + value.slice(1).toLowerCase(),
-    date: (value: string) =>
-      new Intl.DateTimeFormat('en-US').format(new Date(value)),
+    uppercase: (value?: string) => {
+      if (typeof value !== 'string') return ''
+      return value.toUpperCase()
+    },
+    lowercase: (value?: string) => {
+      if (typeof value !== 'string') return ''
+      return value.toLowerCase()
+    },
+    capitalize: (value?: string) => {
+      if (typeof value !== 'string') return ''
+      return value.charAt(0).toUpperCase() + value.slice(1).toLowerCase()
+    },
+    date: (value?: Date | string | number, locale: string = 'en-US') =>
+      new Intl.DateTimeFormat(locale).format(new Date(value)),
   },
 )
 
@@ -35,4 +43,13 @@ console.log(injector('Hello world. {name@capitalize}!', { name: 'MARIE' }))
 
 console.log(injector('Now is {now@date}', { now: new Date() }))
 // Output: `Now is 1/1/2021`
+
+console.log(injector('Now is {now@date(pt-BR)}', { now: new Date() }))
+// Output: `Now is 01/01/2021`
+
+console.log(injector('Your username is {username}', { username: 'user123' }))
+// Output: `Your username is user123`
+
+console.log(injector('{name@lowercase|capitalize}', { name: 'JOHN DOE' }))
+// Output: `John doe`
 ```
