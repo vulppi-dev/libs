@@ -1,5 +1,10 @@
+import { Buffer } from 'buffer'
 import type { Readable } from 'stream'
 import {
+  brotliCompress,
+  brotliDecompress,
+  createBrotliCompress,
+  createBrotliDecompress,
   createDeflate,
   createGunzip,
   createGzip,
@@ -9,13 +14,12 @@ import {
   gzip,
   inflate,
 } from 'zlib'
-import { Buffer } from 'buffer'
 
 /**
  * Extracts the token from the Authorization header.
  *
- * @param {string | null} authorization - The Authorization header value.
- * @returns {string | null} The extracted token or null if not found.
+ * @param authorization - The Authorization header value.
+ * @returns The extracted token or null if not found.
  */
 export function extractTokenFromAuthorization(authorization?: string | null) {
   if (!authorization) {
@@ -26,13 +30,22 @@ export function extractTokenFromAuthorization(authorization?: string | null) {
 
   const bearerMatch = trimmed.match(/^Bearer\s+(.+)$/i)
   if (bearerMatch) {
-    return bearerMatch[1]
+    return {
+      type: 'bearer',
+      token: bearerMatch[1],
+    } as const
   }
 
   const basicMatch = trimmed.match(/^Basic\s+(.+)$/i)
   if (basicMatch) {
     try {
-      return Buffer.from(basicMatch[1], 'base64').toString('utf-8')
+      const data = Buffer.from(basicMatch[1], 'base64').toString('utf-8')
+      const [username, password] = data.split(':')
+      return {
+        type: 'basic',
+        username,
+        password,
+      } as const
     } catch (_) {
       return null
     }
@@ -41,10 +54,17 @@ export function extractTokenFromAuthorization(authorization?: string | null) {
   return null
 }
 
-export type RequestEncoding = 'gzip' | 'x-gzip' | 'deflate' | 'identity'
+export type RequestEncoding = 'gzip' | 'x-gzip' | 'deflate' | 'identity' | 'br'
+
+const REGEXP = {
+  gzip: /^(?:x-)?gzip$/i,
+  deflate: /^deflate$/i,
+  identity: /^identity$/i,
+  br: /^br$/i,
+} as const
 
 /**
- * Decompress buffer with gzip and/or deflate encoding
+ * Decompress buffer
  *
  * @param data
  * @param encoding
@@ -56,16 +76,27 @@ export async function parseDecompressBuffer(
 ) {
   let buffer = data
   for (const enc of encoding) {
-    if (/^gzip$/i.test(enc)) {
+    if (REGEXP.identity.test(enc)) {
+      continue
+    }
+
+    if (REGEXP.gzip.test(enc)) {
       buffer = await new Promise<Buffer>((resolve, reject) => {
         gunzip(buffer, (err, res) => {
           if (err) return reject(err)
           resolve(res)
         })
       })
-    } else if (/^deflate$/i.test(enc)) {
+    } else if (REGEXP.deflate.test(enc)) {
       buffer = await new Promise<Buffer>((resolve, reject) => {
         inflate(buffer, (err, res) => {
+          if (err) return reject(err)
+          resolve(res)
+        })
+      })
+    } else if (REGEXP.br.test(enc)) {
+      buffer = await new Promise<Buffer>((resolve, reject) => {
+        brotliDecompress(buffer, (err, res) => {
           if (err) return reject(err)
           resolve(res)
         })
@@ -76,7 +107,7 @@ export async function parseDecompressBuffer(
 }
 
 /**
- * Compress buffer with gzip and/or deflate encoding
+ * Compress buffer
  *
  * @param data
  * @param encoding
@@ -87,17 +118,28 @@ export async function parseCompressBuffer(
   encoding: RequestEncoding[] = ['identity'],
 ) {
   let buffer = data
-  for (const enc of encoding) {
-    if (/^gzip$/i.test(enc)) {
+  for (const enc of encoding.toReversed()) {
+    if (REGEXP.identity.test(enc)) {
+      continue
+    }
+
+    if (REGEXP.gzip.test(enc)) {
       buffer = await new Promise<Buffer>((resolve, reject) => {
         gzip(buffer, (err, res) => {
           if (err) return reject(err)
           resolve(res)
         })
       })
-    } else if (/^deflate$/i.test(enc)) {
+    } else if (REGEXP.deflate.test(enc)) {
       buffer = await new Promise<Buffer>((resolve, reject) => {
         deflate(buffer, (err, res) => {
+          if (err) return reject(err)
+          resolve(res)
+        })
+      })
+    } else if (REGEXP.br.test(enc)) {
+      buffer = await new Promise<Buffer>((resolve, reject) => {
+        brotliCompress(buffer, (err, res) => {
           if (err) return reject(err)
           resolve(res)
         })
@@ -108,44 +150,56 @@ export async function parseCompressBuffer(
 }
 
 /**
- * Decompress stream piping with gzip and/or deflate encoding
+ * Decompress stream piping
  *
  * @param data
  * @param encoding
  * @returns
  */
-export async function parseDecompressStream(
+export function parseDecompressStream(
   data: Readable,
   encoding: RequestEncoding[] = ['identity'],
 ) {
   let stream = data
   for (const enc of encoding) {
-    if (/^gzip$/i.test(enc)) {
+    if (REGEXP.identity.test(enc)) {
+      continue
+    }
+
+    if (REGEXP.gzip.test(enc)) {
       stream = stream.pipe(createGunzip())
-    } else if (/^deflate$/i.test(enc)) {
+    } else if (REGEXP.deflate.test(enc)) {
       stream = stream.pipe(createInflate())
+    } else if (REGEXP.br.test(enc)) {
+      stream = stream.pipe(createBrotliDecompress())
     }
   }
   return stream
 }
 
 /**
- * Compress stream piping with gzip and/or deflate encoding
+ * Compress stream piping
  *
  * @param data
  * @param encoding
  * @returns
  */
-export async function parseCompressStream(
+export function parseCompressStream(
   data: Readable,
   encoding: RequestEncoding[] = ['identity'],
 ) {
   let stream = data
-  for (const enc of encoding) {
-    if (/^gzip$/i.test(enc)) {
+  for (const enc of encoding.toReversed()) {
+    if (REGEXP.identity.test(enc)) {
+      continue
+    }
+
+    if (REGEXP.gzip.test(enc)) {
       stream = stream.pipe(createGzip())
-    } else if (/^deflate$/i.test(enc)) {
+    } else if (REGEXP.deflate.test(enc)) {
       stream = stream.pipe(createDeflate())
+    } else if (REGEXP.br.test(enc)) {
+      stream = stream.pipe(createBrotliCompress())
     }
   }
   return stream
