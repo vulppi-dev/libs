@@ -1,6 +1,6 @@
 {
   "name": "@vulppi/toolbelt",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "A collection of tools and utilities for Node.js and TypeScript.",
   "author": {
     "name": "Renato Rodrigues",
@@ -73,8 +73,8 @@
     "pako": "^2.1.0"
   },
   "devDependencies": {
-    "@types/node": "^22.5.5",
-    "typescript": "^5.6.2",
+    "@types/node": "^22.9.0",
+    "typescript": "^5.6.3",
     "vulppi": "^0.2.7"
   },
   "engines": {
