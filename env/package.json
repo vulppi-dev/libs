@@ -1,6 +1,6 @@
 {
   "name": "@vulppi/env",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "A ENV utilities for Vulppi",
   "license": "MIT",
   "private": false,
