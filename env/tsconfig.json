@@ -22,11 +22,5 @@
     "checkJs": false,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "baseUrl": "src",
-    "paths": {
-      "@/*": [
-        "*"
-      ]
-    }
   }
 }

@@ -41,7 +41,7 @@ export function parseEnvToList(txt: string): EnvListItem[] {
 
     const [key, value] = line.split('=').map((s) => s.trim())
     lastIndex++
-    env[lastIndex] = env[lastIndex] || {}
+    env[lastIndex] = env[lastIndex] || { key: '', value: '', description: '' }
     env[lastIndex].key = key
     env[lastIndex].value = value
 
@@ -69,7 +69,13 @@ export function parseEnvToList(txt: string): EnvListItem[] {
  */
 export function parseListToEnv(env: EnvListItem[]): string {
   return env
-    .map(({ key, value, description }) => {
+    .map(({ key, value, description = '' }, index) => {
+      if (!key) {
+        throw new Error(`Element '${index}' is missing a key`)
+      }
+      if (!value) {
+        throw new Error(`Element '${index}' is missing a value`)
+      }
       const result = `${key}=${value}`
 
       if (description) {
