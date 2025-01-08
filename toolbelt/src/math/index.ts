@@ -44,3 +44,13 @@ export function curve(t: number, invert = false) {
   const safeT = Math.max(0, Math.min(1, t))
   return Math.sin(Math.PI * safeT) * (invert ? -1 : 1) + (invert ? 1 : 0)
 }
+
+/**
+ * Distance between two points multidimensional
+ *
+ * @param a
+ * @param b
+ */
+export function distance(a: number[], b: number[]) {
+  return a.reduce((acc, val, i) => acc + (val - b[i]) ** 2, 0) ** 0.5
+}

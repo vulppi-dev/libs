@@ -1,6 +1,6 @@
 {
   "name": "@vulppi/toolbelt",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "A collection of tools and utilities for Node.js and TypeScript.",
   "author": {
     "name": "Renato Rodrigues",
@@ -37,29 +37,29 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.mjs",
-      "require": "./dist/index.cjs",
-      "types": "./dist/index.d.ts"
+      "require": "./dist/index.cjs"
     },
     "./form": {
+      "types": "./dist/form/index.d.ts",
       "import": "./dist/form/index.mjs",
-      "require": "./dist/form/index.cjs",
-      "types": "./dist/form/index.d.ts"
+      "require": "./dist/form/index.cjs"
     },
     "./math": {
+      "types": "./dist/math/index.d.ts",
       "import": "./dist/math/index.mjs",
-      "require": "./dist/math/index.cjs",
-      "types": "./dist/math/index.d.ts"
+      "require": "./dist/math/index.cjs"
     },
     "./node": {
+      "types": "./dist/node/index.d.ts",
       "import": "./dist/node/index.mjs",
-      "require": "./dist/node/index.cjs",
-      "types": "./dist/node/index.d.ts"
+      "require": "./dist/node/index.cjs"
     },
     "./serial": {
+      "types": "./dist/serial/index.d.ts",
       "import": "./dist/serial/index.mjs",
-      "require": "./dist/serial/index.cjs",
-      "types": "./dist/serial/index.d.ts"
+      "require": "./dist/serial/index.cjs"
     }
   },
   "scripts": {
@@ -73,9 +73,9 @@
     "pako": "^2.1.0"
   },
   "devDependencies": {
-    "@types/node": "^22.9.0",
-    "typescript": "^5.6.3",
-    "vulppi": "^0.2.7"
+    "@types/node": "^22.10.5",
+    "typescript": "^5.7.2",
+    "vulppi": "^0.2.9"
   },
   "engines": {
     "node": ">=18.0.0"
