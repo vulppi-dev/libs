@@ -2,34 +2,31 @@
   "folders": [
     {
       "name": "toolbelt",
-      "path": "./libs/toolbelt"
+      "path": "./toolbelt"
     },
     {
       "name": "string",
-      "path": "./libs/string"
+      "path": "./string"
     },
     {
       "name": "tailwindcss",
-      "path": "./libs/tailwindcss"
+      "path": "./tailwindcss"
     },
     {
       "name": "node-tree",
-      "path": "./libs/node-tree"
+      "path": "./node-tree"
     },
     {
       "name": "env",
-      "path": "./libs/env"
+      "path": "./env"
     },
     {
       "name": "promise-lock",
-      "path": "./libs/promise-lock"
+      "path": "./promise-lock"
     },
     {
       "name": "root",
       "path": "."
     },
   ],
-  "settings": {
-    "svg.preview.background": "editor"
-  }
 }
