@@ -1,5 +1,4 @@
 import plugin from 'tailwindcss/plugin'
-import type { CSSRuleObject } from 'tailwindcss/types/config'
 import { genColorLabel } from '../utils/label'
 import { genColorVariable, parseColorVariable } from '../utils/variable'
 
@@ -15,7 +14,7 @@ type ThemeColors<C extends Record<string, Palette>> = {
 type AddBaseStyleArgs = {
   strategy: 'dark' | 'light'
   hasAltColors?: boolean
-  addBase: (base: CSSRuleObject) => void
+  addBase: (base: any) => void
 }
 
 const baseColorsDark = {
@@ -61,7 +60,7 @@ export function createThemeColors<C extends Record<string, Palette>>({
   colorsAlt,
   colorAliases = {},
   strategy = 'light',
-}: ThemeColors<C>) {
+}: ThemeColors<C>): ReturnType<typeof plugin> {
   const colorVariants = [...Object.keys(colors), ...Object.keys(colorAliases)]
   const colorVariables = parseColorVariable({
     colors,

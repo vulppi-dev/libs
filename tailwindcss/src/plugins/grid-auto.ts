@@ -2,7 +2,7 @@ import plugin from 'tailwindcss/plugin'
 import defaultTheme from 'tailwindcss/defaultTheme'
 import { createPxComment } from '../utils/comment'
 
-export const gridAuto = plugin(
+export const gridAuto: ReturnType<typeof plugin> = plugin(
   function ({ matchUtilities, theme }) {
     matchUtilities(
       {

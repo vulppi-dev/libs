@@ -1,18 +1,15 @@
-import { rgb, hsl, hsv, lab, oklab, lch, oklch, hcl } from 'chroma-js'
+import chroma from 'chroma-js'
 import type { Palette } from '../plugins/color-theme'
 
-const ColorSpaces = {
-  rgb,
-  hsl,
-  hsv,
-  lab,
-  oklab,
-  lch,
-  oklch,
-  hcl,
-}
-
-export type ColorSpaceType = keyof typeof ColorSpaces
+export type ColorSpaceType =
+  | 'rgb'
+  | 'hsl'
+  | 'hsv'
+  | 'lab'
+  | 'oklab'
+  | 'lch'
+  | 'oklch'
+  | 'hcl'
 
 type ColorLabelArgs<P extends {}> = {
   label: string
@@ -54,7 +51,7 @@ function normalizeColor(color: string) {
 
   const { schema, a, b, c } = match.groups
 
-  const colorSpaceFunc = ColorSpaces[schema as ColorSpaceType]
+  const colorSpaceFunc = chroma[schema as ColorSpaceType]
   const chromaColor = colorSpaceFunc(
     normalizeColorValue(a),
     normalizeColorValue(b),

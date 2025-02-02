@@ -1,7 +1,10 @@
 import plugin from 'tailwindcss/plugin'
 import { createPxComment } from '../utils/comment'
 
-export const roundedScreen = plugin(function ({ matchUtilities, theme }) {
+export const roundedScreen: ReturnType<typeof plugin> = plugin(function ({
+  matchUtilities,
+  theme,
+}) {
   matchUtilities(
     {
       'v-rounded': (value) => ({
