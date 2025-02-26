@@ -31,3 +31,5 @@ export const roundedScreen: ReturnType<typeof plugin> = plugin(function ({
     { values: theme('borderRadius') },
   )
 })
+
+export default roundedScreen

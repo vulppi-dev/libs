@@ -1,6 +1,6 @@
 {
   "name": "@vulppi/tailwindcss",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "A collection of plugins for TailwindCSS.",
   "author": {
     "name": "Renato Rodrigues",
@@ -22,19 +22,16 @@
     "plugins"
   ],
   "type": "module",
-  "module": "./dist/index.mjs",
-  "main": "./dist/index.cjs",
-  "types": "./dist/index.d.ts",
   "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.cjs"
+    "./*": {
+      "types": "./dist/*.d.ts",
+      "import": "./dist/*.mjs",
+      "require": "./dist/*.cjs"
     }
   },
   "scripts": {
     "dev": "tsc --watch --noEmit true --emitDeclarationOnly false",
-    "build": "vpp build index",
+    "build": "vpp build --base src/plugins container extend-gradient grid-auto screen-rounded",
     "pub": "npm publish --access=public --tag=latest"
   },
   "devDependencies": {

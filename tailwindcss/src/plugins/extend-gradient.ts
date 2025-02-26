@@ -16,3 +16,5 @@ export const extendGradientPosition: ReturnType<typeof plugin> = plugin(
     )
   },
 )
+
+export default extendGradientPosition

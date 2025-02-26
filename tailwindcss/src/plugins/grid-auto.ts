@@ -29,3 +29,5 @@ export const gridAuto: ReturnType<typeof plugin> = plugin(
     },
   },
 )
+
+export default gridAuto

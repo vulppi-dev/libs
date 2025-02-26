@@ -2,7 +2,7 @@ import plugin from 'tailwindcss/plugin'
 import { createPxComment } from '../utils/comment'
 import { createNumber } from '../utils/theme-content'
 
-export const containers: ReturnType<typeof plugin> = plugin(
+const containers: ReturnType<typeof plugin> = plugin(
   function ({ matchUtilities, addUtilities, theme }) {
     addUtilities({
       '.flex-center': {
@@ -88,3 +88,5 @@ export const containers: ReturnType<typeof plugin> = plugin(
     },
   },
 )
+
+export default containers

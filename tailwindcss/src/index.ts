@@ -1,5 +1,5 @@
 export * from './plugins/color-theme'
 export * from './plugins/container'
-export * from './plugins/extend-gradient-position'
+export * from './plugins/extend-gradient'
 export * from './plugins/grid-auto'
 export * from './plugins/screen-rounded'
