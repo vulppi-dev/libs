@@ -1,3 +1,26 @@
+export type Lock = {
+  /**
+   * Getter function that returns the current number of active locks.
+   *
+   * @return {number} The current number of active locks.
+   */
+  readonly length: number
+  /**
+   * Getter function that returns if the lock is already free.
+   *
+   * @return {boolean} If the lock is already free.
+   */
+  readonly is_free: boolean
+  /**
+   * A function that releases the lock for the next lock can run.
+   */
+  unlock: () => void
+  /**
+   * A function that releases the lock and stops propagation.
+   */
+  stopPropagation: () => void
+}
+
 /**
  * Creates a lock object that can be used to synchronize access to a shared resource.
  *
@@ -35,12 +58,14 @@ export function createLocker(opt?: { timeout?: number }) {
      */
     async lock() {
       length++
+      let locked = true
       const last = last_promise
       const { resolve, promise } = Promise.withResolvers<boolean>()
       last_promise = promise
 
       const unlock = () => {
         resolve(true)
+        locked = false
         length--
         if (length === 0) {
           last_promise = undefined
@@ -68,23 +93,15 @@ export function createLocker(opt?: { timeout?: number }) {
       }
 
       return {
-        /**
-         * Getter function that returns the current number of active locks.
-         *
-         * @return {number} The current number of active locks.
-         */
+        get is_free() {
+          return !locked
+        },
         get length(): number {
           return length
         },
-        /**
-         * A function that releases the lock for the next lock can run.
-         */
         unlock,
-        /**
-         * A function that releases the lock and stops propagation.
-         */
         stopPropagation,
-      }
+      } as Lock
     },
   }
 }

@@ -1,6 +1,6 @@
 {
   "name": "@vulppi/promise-lock",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "A promise-based lock library for Vulppi",
   "author": {
     "name": "Renato Rodrigues",
@@ -29,9 +29,9 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.mjs",
-      "require": "./dist/index.cjs",
-      "types": "./dist/index.d.ts"
+      "require": "./dist/index.cjs"
     }
   },
   "scripts": {
@@ -41,8 +41,8 @@
     "pub": "npm publish --access=public --tag=latest"
   },
   "devDependencies": {
-    "@types/node": "^22.5.2",
-    "typescript": "^5.5.4",
-    "vulppi": "^0.2.3"
+    "@types/node": "^22.13.5",
+    "typescript": "^5.7.3",
+    "vulppi": "^0.2.11"
   }
 }
