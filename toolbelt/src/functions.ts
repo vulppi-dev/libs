@@ -77,7 +77,46 @@ export function omitNullables<R extends object>(obj: R): R {
 }
 
 /**
- * The tryCatch function is a utility function that allows you to run an async function
+ * The tryCatch function is a utility function that allows you to run a function
+ * and catch any errors that occur without a block try/catch statement.
+ *
+ * @param cb - Function to run
+ * @returns [result, error]
+ *
+ * @example
+ * const [result, error] = tryCatch(() => {
+ *   return JSON.parse(jsonText);
+ * });
+ * if (error) {
+ *   console.error('Error fetching data:', error);
+ * } else {
+ *   console.log('Data:', result);
+ * }
+ *
+ */
+export function tryCatch<F extends (...args: any[]) => any>(
+  cb: F,
+): [ReturnType<F>, null] | [null, Error] {
+  try {
+    return [cb(), null] as [ReturnType<F>, null]
+  } catch (err: any) {
+    if (err instanceof Error) {
+      return [null, err]
+    } else if (typeof err === 'string') {
+      return [null, new Error(err)]
+    } else {
+      return [
+        null,
+        new Error('Unknown error', {
+          cause: err,
+        }),
+      ]
+    }
+  }
+}
+
+/**
+ * The tryCatchAsync function is a utility function that allows you to run an async function
  * and catch any errors that occur without a block try/catch statement.
  *
  * @param cb - Function to run
@@ -93,10 +132,11 @@ export function omitNullables<R extends object>(obj: R): R {
  * } else {
  *   console.log('Data:', result);
  * }
+ *
  */
-export async function tryCatch<
-  F extends (...args: any[]) => any | Promise<any>,
->(cb: F): Promise<[ReturnType<F>, null] | [null, Error]> {
+export async function tryCatchAsync<F extends (...args: any[]) => Promise<any>>(
+  cb: F,
+): Promise<[ReturnType<F>, null] | [null, Error]> {
   try {
     return [await cb(), null] as [ReturnType<F>, null]
   } catch (err: any) {
@@ -129,6 +169,7 @@ export async function tryCatch<
  * } else {
  *   console.log('Data:', result);
  * }
+ *
  */
 export async function tryCatchPromise<T>(
   promise: Promise<T>,
