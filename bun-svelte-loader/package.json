@@ -1,0 +1,52 @@
+{
+  "name": "@vulppi/bun-svelte-loader",
+  "version": "0.0.1",
+  "description": "A Bun loader for Svelte components",
+  "author": {
+    "name": "Renato Rodrigues",
+    "email": "renato@vulppi.dev"
+  },
+  "license": "MIT",
+  "private": false,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vulppi-dev/libs.git",
+    "directory": "libs/bun-svelte-loader"
+  },
+  "keywords": [
+    "vulppi",
+    "bun",
+    "svelte",
+    "loader",
+    "bun-loader",
+    "svelte-loader",
+    "plugin",
+    "bun-plugin",
+    "svelte-plugin"
+  ],
+  "type": "module",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs"
+    }
+  },
+  "scripts": {
+    "dev": "tsc --watch --noEmit true --emitDeclarationOnly false",
+    "build": "vpp build --esm index",
+    "clear": "rimraf dist",
+    "pub": "npm publish --access=public --tag=latest"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.2.8",
+    "vulppi": "^0.2.11"
+  },
+  "dependencies": {
+    "xxhash-wasm": "^1.1.0"
+  },
+  "peerDependencies": {
+    "svelte": "^5.25.6"
+  }
+}

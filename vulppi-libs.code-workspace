@@ -25,6 +25,10 @@
       "path": "./promise-lock"
     },
     {
+      "name": "bun-svelte-loader",
+      "path": "./bun-svelte-loader"
+    },
+    {
       "name": "root",
       "path": "."
     },
