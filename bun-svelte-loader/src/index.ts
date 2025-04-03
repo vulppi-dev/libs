@@ -5,10 +5,8 @@ import { compile, compileModule, preprocess } from 'svelte/compiler'
 import { fileURLToPath } from 'url'
 import xxhash from 'xxhash-wasm'
 
-const dev = process.env.NODE_ENV !== 'production'
-
-const SVELTE_RUNES = /\.svelte(\.ts|\.js)$/
-const SVELTE_FILE = /\.svelte(\.ts|\.js)?$/
+const SVELTE_MODULE = /\.svelte\.(?:t|j)s$/
+const SVELTE_FILE = /\.svelte(?:\.(?:t|j)s)?$/
 const SVELTE_CSS = /\?svelte-css$/
 
 const CSS_MAP = new Map<string, string>()
@@ -32,7 +30,9 @@ export default {
         filename: args.path,
       })
 
-      const compiled = SVELTE_RUNES.test(args.path)
+      const is_module = SVELTE_MODULE.test(args.path)
+
+      const compiled = is_module
         ? compileModule(preprocessed.code, {
             filename: args.path,
             generate: 'client',
@@ -41,7 +41,7 @@ export default {
             filename: args.path,
             css: 'external',
             generate: 'client',
-            hmr: dev,
+            hmr: true,
           })
 
       const js = compiled.js.code

@@ -1,6 +1,6 @@
 {
   "name": "@vulppi/bun-svelte-loader",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "A Bun loader for Svelte components",
   "author": {
     "name": "Renato Rodrigues",
@@ -34,7 +34,7 @@
     }
   },
   "scripts": {
-    "dev": "tsc --watch --noEmit true --emitDeclarationOnly false",
+    "dev": "vpp build --watch --esm index",
     "build": "vpp build --esm index",
     "clear": "rimraf dist",
     "pub": "npm publish --access=public --tag=latest"
