@@ -41,7 +41,6 @@ export default {
             filename: args.path,
             css: 'external',
             generate: 'client',
-            hmr: true,
           })
 
       const js = compiled.js.code
@@ -71,9 +70,6 @@ export default {
 
     build.onResolve({ filter: /^[^.$]/, namespace: 'file' }, async (args) => {
       try {
-        import.meta.resolve(args.path)
-        return
-      } catch (e) {
         const package_path = fileURLToPath(
           import.meta.resolve(path.join(args.path, 'package.json')),
         )
@@ -85,10 +81,14 @@ export default {
           package_json.svelte || package_json.exports?.['.']?.svelte,
         )
 
+        if (!module_path) return
+
         return {
           path: module_path,
           namespace: 'file',
         }
+      } catch (e) {
+        return
       }
     })
   },

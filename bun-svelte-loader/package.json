@@ -1,6 +1,6 @@
 {
   "name": "@vulppi/bun-svelte-loader",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "A Bun loader for Svelte components",
   "author": {
     "name": "Renato Rodrigues",
