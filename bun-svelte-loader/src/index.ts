@@ -1,8 +1,8 @@
 import type { BunPlugin } from 'bun'
 import fs from 'fs/promises'
+import { glob } from 'glob'
 import path from 'path'
 import { compile, compileModule, preprocess } from 'svelte/compiler'
-import { fileURLToPath } from 'url'
 import xxhash from 'xxhash-wasm'
 
 const SVELTE_MODULE = /\.svelte\.(?:t|j)s$/
@@ -70,17 +70,54 @@ export default {
 
     build.onResolve({ filter: /^[^.$]/, namespace: 'file' }, async (args) => {
       try {
-        const package_path = fileURLToPath(
-          import.meta.resolve(path.join(args.path, 'package.json')),
+        if (/^(?:[\/\\.]|[a-zA-Z]+:)/.test(args.path)) return
+
+        let package_glob_path = ''
+        let rest_path: string[] = []
+
+        if (/^@/.test(args.path)) {
+          const [scope, base, ...rest] = args.path.split('/')
+          package_glob_path = path.join(
+            process.cwd(),
+            'node_modules',
+            scope,
+            base,
+            '**',
+            'package.json',
+          )
+          rest_path = rest
+        } else {
+          const [base, ...rest] = args.path.split('/')
+          package_glob_path = path.join(
+            'node_modules',
+            base,
+            '**',
+            'package.json',
+          )
+          rest_path = rest
+        }
+
+        const [package_path] = await glob(
+          package_glob_path.replace(/\\/g, '/'),
+          {
+            nodir: true,
+            absolute: true,
+          },
         )
+
+        if (!(await fs.exists(package_path))) {
+          return
+        }
+
         const package_source = await fs.readFile(package_path, 'utf8')
         const package_json = JSON.parse(package_source)
 
         const module_path = path.join(
           path.dirname(package_path),
-          package_json.svelte || package_json.exports?.['.']?.svelte,
+          rest_path.length > 0
+            ? package_json.exports?.[['.', ...rest_path].join('/')]?.svelte
+            : package_json.svelte || package_json.exports?.['.']?.svelte,
         )
-
         if (!module_path) return
 
         return {
