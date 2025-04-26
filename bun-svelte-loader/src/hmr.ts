@@ -36,11 +36,13 @@ export default {
         ? compileModule(preprocessed.code, {
             filename: args.path,
             generate: 'client',
+            dev: true,
           })
         : compile(preprocessed.code, {
             filename: args.path,
             css: 'external',
             generate: 'client',
+            hmr: true,
           })
 
       const js = compiled.js.code
