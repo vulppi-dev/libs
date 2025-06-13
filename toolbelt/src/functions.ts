@@ -1,30 +1,18 @@
-type UnionFunctionWithArgsType<Args extends any[] = any[]> = [
-  (...args: Args) => {},
-  ...Args,
-]
-type UnionFunctionType =
-  | VoidFunction
-  | UnionFunctionWithArgsType
-  | undefined
-  | null
+/**
+ * The promiseDelay function is a utility function that returns a Promise
+ * that resolves after a specified number of milliseconds.
+ */
+export function promiseDelay(ms: number) {
+  return new Promise<never>((resolve) => setTimeout(resolve, ms))
+}
 
-export const unionSerialFunctions =
-  (...fns: UnionFunctionType[]) =>
-  () => {
-    for (const fn of fns) {
-      if (Array.isArray(fn)) {
-        const rfn: (typeof fn)[0] = fn.shift()
-
-        rfn(...(fn as Array<(typeof fn)[1]>))
-      } else {
-        fn && fn()
-      }
-    }
-  }
-
-export const promiseDelay = (ms: number) =>
-  new Promise<never>((resolve) => setTimeout(resolve, ms))
-
+/**
+ * The clone function is a utility function that creates a deep copy of an object.
+ * It uses structuredClone if available, otherwise falls back to JSON serialization.
+ *
+ * @param obj - The object to clone.
+ * @returns A deep copy of the input object.
+ */
 export function clone<E extends any>(obj: E) {
   if (typeof structuredClone !== 'function') {
     return JSON.parse(JSON.stringify(obj)) as E
@@ -33,6 +21,19 @@ export function clone<E extends any>(obj: E) {
   }
 }
 
+/**
+ * The omitShallowProps function is a utility function that creates a shallow copy of an object
+ * and omits the specified keys from the copy.
+ *
+ * @param obj - The object to clone and omit properties from.
+ * @param keys - The keys to omit from the cloned object.
+ * @returns A new object with the specified keys omitted.
+ *
+ * @example
+ * const original = { a: 1, b: 2, c: 3 };
+ * const result = omitShallowProps(original, 'b', 'c');
+ * console.log(result); // { a: 1 }
+ */
 export function omitShallowProps<P extends object, K extends keyof P>(
   obj: P,
   ...keys: K[]
@@ -44,15 +45,44 @@ export function omitShallowProps<P extends object, K extends keyof P>(
   return ret as Omit<P, K>
 }
 
+/**
+ * The tryCatchCallback function is a utility function that allows you to run a callback function
+ * and catch any errors that occur without a block try/catch statement.
+ *
+ * @param run - Function to run
+ * @param cbErr - Callback function to handle errors
+ *
+ * @returns The result of the run function or null if an error occurs.
+ *
+ * @example
+ * tryCatchCallback(() => {
+ *   throw new Error('Test error');
+ * }, (err) => {
+ *   console.error('Caught error:', err);
+ * });
+ */
 export function tryCatchCallback<R extends Function>(run: R, cbErr: any) {
   try {
     return run()
   } catch (err) {
     console.error(err)
     cbErr && cbErr(err)
+    return null
   }
 }
 
+/**
+ * The omitNullables function is a utility function that creates a deep copy of an object
+ * and omits any properties that are null or undefined.
+ *
+ * @param obj - Object to omit null or undefined values from
+ * @returns A new object with null or undefined values omitted
+ *
+ * @example
+ * const original = { a: 1, b: null, c: undefined, d: { e: 2, f: null } };
+ * const result = omitNullables(original);
+ * console.log(result); // { a: 1, d: { e: 2 } }
+ */
 export function omitNullables<R extends object>(obj: R): R {
   if (typeof obj !== 'object') return obj
   if (Array.isArray(obj))
