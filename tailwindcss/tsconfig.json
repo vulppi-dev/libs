@@ -1,32 +1,38 @@
 {
-  "include": [
-    "src/**/*.ts"
-  ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "dist",
+    "example"
+  ],
+  "include": [
+    "src/**/*.ts",
   ],
   "compilerOptions": {
-    "module": "ESNext",
+    "lib": [
+      "ESNext"
+    ],
     "target": "ESNext",
-    "moduleResolution": "Bundler",
-    "outDir": "dist",
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-    "isolatedModules": true,
-    "strict": true,
+    "module": "Preserve",
+    "moduleDetection": "force",
+    "allowJs": true,
+    // Bundler mode
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
+    // Best practices
+    "strict": true,
     "skipLibCheck": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    // Some stricter flags (disabled by default)
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "noPropertyAccessFromIndexSignature": false,
     "declaration": true,
     "emitDeclarationOnly": true,
-    "allowJs": true,
-    "checkJs": false,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "baseUrl": "src",
-    "paths": {
-      "@/*": [
-        "*"
-      ]
-    }
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "declarationDir": "./dist",
   }
 }

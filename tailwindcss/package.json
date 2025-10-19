@@ -1,6 +1,6 @@
 {
   "name": "@vulppi/tailwindcss",
-  "version": "1.0.2",
+  "version": "2.0.0",
   "description": "A collection of plugins for TailwindCSS.",
   "author": {
     "name": "Renato Rodrigues",
@@ -31,20 +31,17 @@
   },
   "scripts": {
     "dev": "tsc --watch --noEmit true --emitDeclarationOnly false",
-    "build": "vpp build --base src/plugins container extend-gradient grid-auto screen-rounded",
+    "build": "bun build:bundle && bun build:types",
+    "build:bundle": "bun build src/*.ts --outdir dist --format esm",
+    "build:types": "tsc --project tsconfig.json",
     "pub": "npm publish --access=public --tag=latest"
   },
   "devDependencies": {
     "@types/node": "^22.13.0",
     "tailwindcss": "^4.0.3",
-    "typescript": "^5.7.3",
-    "vulppi": "^0.2.11"
+    "typescript": "^5.7.3"
   },
   "peerDependencies": {
-    "tailwindcss": "^4.0.0"
-  },
-  "dependencies": {
-    "@types/chroma-js": "^3.1.1",
-    "chroma-js": "^3.1.2"
+    "tailwindcss": "^4.0.3"
   }
 }
