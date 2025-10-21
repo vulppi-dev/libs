@@ -37,14 +37,16 @@ export function buildPlugin(dev = false): BunPlugin {
             compiled = compileModule(preprocessed.code, {
               filename: path.basename(args.path),
               generate: 'client',
-              dev: dev,
+              dev,
             })
           } else {
             compiled = compile(preprocessed.code, {
               filename: path.basename(args.path),
               css: 'external',
               generate: 'client',
+              dev,
               hmr: dev,
+              preserveComments: dev,
             })
           }
 
